@@ -1,6 +1,6 @@
 # StarsGo V2 - main.py
 # python-telegram-bot 20+
-import os, sqlite3
+import os, sqlite3, uuid, time
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
