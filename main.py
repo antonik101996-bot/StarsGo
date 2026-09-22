@@ -9,7 +9,14 @@ ADMIN = "Lakizyx"
 PRICE_PER_STAR = 1.35
 
 db = sqlite3.connect("starsgo.db", check_same_thread=False)
-cur = db.cursor()
+cur = db.cursor)
+cur.execute("""
+CREATE TABLE IF NOT EXISTS balances (
+    username TEXT PRIMARY KEY,
+    balance REAL DEFAULT 0
+)
+""")
+db.commit()
 cur.execute("CREATE TABLE IF NOT EXISTS premium(username TEXT PRIMARY KEY)")
 db.commit()
 cur.execute("INSERT OR IGNORE INTO premium VALUES(?)",(ADMIN.lower(),)); db.commit()
