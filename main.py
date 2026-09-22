@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 
 TOKEN = os.getenv("BOT_TOKEN")
 ADMIN = "Lakizyx"
-PRICE_PER_STAR = 1.38
+PRICE_PER_STAR = 1.35
 
 db = sqlite3.connect("starsgo.db", check_same_thread=False)
 cur = db.cursor()
@@ -107,8 +107,30 @@ async def cmd_unpremium(update,ctx):
     p=update.message.text.split()
     if len(p)!=2: return await update.message.reply_text("Используй: /unpremium @user")
     remove_premium(p[1].replace("@","")); await update.message.reply_text("❌ Premium снят")
+async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.username != ADMIN:
+        return
+
+    keyboard = [
+        [InlineKeyboardButton("👤 Пользователи", callback_data="admin_users")],
+        [InlineKeyboardButton("💰 Балансы", callback_data="admin_balances")],
+        [InlineKeyboardButton("⭐ Stars", callback_data="admin_stars")],
+        [InlineKeyboardButton("➕ Выдать баланс", callback_data="admin_give")],
+        [InlineKeyboardButton("➖ Снять баланс", callback_data="admin_take")],
+        [InlineKeyboardButton("🚫 Блокировка", callback_data="admin_block")],
+        [InlineKeyboardButton("🎁 Промокоды", callback_data="admin_promo")],
+        [InlineKeyboardButton("📊 Статистика", callback_data="admin_stats")],
+        [InlineKeyboardButton("📢 Рассылка", callback_data="admin_broadcast")],
+        [InlineKeyboardButton("📝 Логи", callback_data="admin_logs")],
+    ]
+
+    await update.message.reply_text(
+        "⚙️ Админ-панель StarsGo",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
 app=Application.builder().token(TOKEN).build()
+app.add_handler(CommandHandler("admin", admin))
 app.add_handler(CommandHandler("start",start))
 app.add_handler(CommandHandler("premium",cmd_premium))
 app.add_handler(CommandHandler("unpremium",cmd_unpremium))
