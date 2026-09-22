@@ -1,1 +1,1 @@
-# StarsGo
+# StarsGo\n\nМинимальный Telegram бот для Railway.\n
