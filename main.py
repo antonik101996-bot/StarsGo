@@ -113,6 +113,30 @@ async def cb(update,ctx):
         s=ctx.user_data.get("stars",0); p=round(s*PRICE)
         await q.edit_message_text(f"💎 Оплата криптовалютой\n\nКоличество: {s} ⭐\nК оплате: {p} ₽\n\nUSDT (TON) / TON\n\nРеквизиты выдаёт @Lakizyx")
 
+# StarsGo - only modified fragments
+# Add these changes into your current main.py
+
+PRICE = 1.38
+PREMIUM_USERS = {"Lakizyx"}  # Premium accounts
+
+def calc_price(stars, username):
+    total = round(stars * PRICE)
+    if username in PREMIUM_USERS:
+        total = round(total * 0.75)
+    return total
+
+# In profile():
+# Premium StarsGo: АКТИВЕН if username == Lakizyx
+
+# Replace every price calculation:
+# price = round(stars * PRICE)
+# with:
+# price = calc_price(stars, target_username)
+
+# Premium purchase button stays for other users,
+# but for Lakizyx show:
+# "💎 Premium StarsGo — Активен (скидка 25%)"
+
 app=Application.builder().token(TOKEN).build()
 app.add_handler(CommandHandler("start",start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,text))
