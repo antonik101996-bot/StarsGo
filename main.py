@@ -1,102 +1,98 @@
-# StarsGo main.py (python-telegram-bot v20+)
+# StarsGo main.py
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 import os
 
 TOKEN=os.getenv("BOT_TOKEN")
-PRICE_PER_STAR=1.38
+PRICE=1.38
 
-def menu():
-    return ReplyKeyboardMarkup(
-        [["⭐ Купить Stars"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"]],
-        resize_keyboard=True)
+def main_menu():
+    return ReplyKeyboardMarkup([["⭐ Купить Stars"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"]],resize_keyboard=True)
 
-async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
-    ctx.user_data.clear()
-    await update.message.reply_text("✨ Добро пожаловать в StarsGo!",reply_markup=menu())
+async def start(u,c):
+    c.user_data.clear()
+    await u.message.reply_text("✨ Добро пожаловать в StarsGo!",reply_markup=main_menu())
 
-async def profile(update:Update,ctx):
-    ctx.user_data["state"]=None
-    u=update.effective_user
-    await update.message.reply_text(
-f"""👤 Профиль
+async def buy(u,c):
+    kb=InlineKeyboardMarkup([
+      [InlineKeyboardButton("100 ⭐",callback_data="p100"),InlineKeyboardButton("300 ⭐",callback_data="p300")],
+      [InlineKeyboardButton("500 ⭐",callback_data="p500")],
+      [InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")],
+      [InlineKeyboardButton("◀️ Назад",callback_data="back")]])
+    await u.message.reply_text("Выберите пакет Stars:",reply_markup=kb)
 
-Имя: {u.first_name or '-'}
-Фамилия: {u.last_name or '-'}
-Username: @{u.username or 'нет'}
-Telegram ID: {u.id}
-Язык: {u.language_code or '-'}
-Premium: {'Да' if u.is_premium else 'Нет'}""")
+async def profile(u,c):
+    me=u.effective_user
+    kb=InlineKeyboardMarkup([
+      [InlineKeyboardButton("💎 Купить Premium StarsGo",callback_data="premium")],
+      [InlineKeyboardButton("◀️ Назад",callback_data="back")]])
+    await u.message.reply_text(f"""👤 Профиль
 
-async def rate(update,ctx):
-    ctx.user_data["state"]=None
-    await update.message.reply_text("📈 Курс Stars\n\n100 ⭐ = 138 ₽\n\nКурс периодически меняется.")
+Имя: {me.first_name}
+Username: @{me.username or "нет"}
+ID: {me.id}
+Premium Telegram: Нет
 
-async def support(update,ctx):
-    ctx.user_data["state"]=None
-    await update.message.reply_text("💬 Поддержка: @Lakizyx")
+💎 Premium StarsGo
+Скидка 25% на все покупки Stars.
+Стоимость: 999 ₽ единоразово.""",reply_markup=kb)
 
-async def buy(update,ctx):
-    ctx.user_data["state"]=None
-    kb=InlineKeyboardMarkup([[InlineKeyboardButton("👤 Для себя",callback_data="self"),InlineKeyboardButton("🎁 Для друга",callback_data="friend")]])
-    await update.message.reply_text("Для кого купить Stars?",reply_markup=kb)
+async def rate(u,c):
+    kb=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад",callback_data="back")]])
+    await u.message.reply_text("📈 Курс Stars\n\n100 ⭐ = 138 ₽\n\nКурс периодически меняется.",reply_markup=kb)
 
-async def on_text(update,ctx):
-    t=update.message.text
-    if t=="⭐ Купить Stars": return await buy(update,ctx)
-    if t=="👤 Профиль": return await profile(update,ctx)
-    if t=="📈 Курс Stars": return await rate(update,ctx)
-    if t=="💬 Поддержка": return await support(update,ctx)
-    st=ctx.user_data.get("state")
-    if st=="username":
-        ctx.user_data["target"]=t.replace("@","")
-        ctx.user_data["state"]="amount"
-        return await update.message.reply_text("Введите количество Stars (например 750):")
+async def support(u,c):
+    kb=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад",callback_data="back")]])
+    await u.message.reply_text("💬 Поддержка\n\n@Lakizyx",reply_markup=kb)
+
+async def text(u,c):
+    t=u.message.text
+    st=c.user_data.get("st")
+    if t=="⭐ Купить Stars": return await buy(u,c)
+    if t=="👤 Профиль": c.user_data["st"]=None; return await profile(u,c)
+    if t=="📈 Курс Stars": c.user_data["st"]=None; return await rate(u,c)
+    if t=="💬 Поддержка": c.user_data["st"]=None; return await support(u,c)
     if st=="amount":
-        if not t.isdigit():
-            return await update.message.reply_text("Введите только число.")
-        stars=int(t); price=round(stars*PRICE_PER_STAR)
-        ctx.user_data["stars"]=stars
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="crypto")]])
-        return await update.message.reply_text(
-f"""🛒 Подтверждение заказа
+        if not t.isdigit(): return await u.message.reply_text("Введите число.")
+        s=int(t); c.user_data["stars"]=s
+        p=round(s*PRICE)
+        kb=InlineKeyboardMarkup([
+          [InlineKeyboardButton("💳 СПБ",callback_data="spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="crypto")],
+          [InlineKeyboardButton("◀️ Назад",callback_data="back")]])
+        c.user_data["st"]=None
+        return await u.message.reply_text(f"🛒 Заказ\n\nПолучатель: @{u.effective_user.username or u.effective_user.id}\nКоличество: {s} ⭐\nСумма: {p} ₽",reply_markup=kb)
 
-Получатель: @{ctx.user_data['target']}
-Количество: {stars} ⭐
-К оплате: {price} ₽
-
-Выберите способ оплаты:""",reply_markup=kb)
-
-async def on_callback(update,ctx):
-    q=update.callback_query; await q.answer(); d=q.data
-    if d=="self":
-        ctx.user_data["target"]=q.from_user.username or str(q.from_user.id)
-        ctx.user_data["state"]="amount"
-        return await q.edit_message_text(f"Получатель: @{ctx.user_data['target']}\n\nВведите количество Stars:")
-    if d=="friend":
-        ctx.user_data["state"]="username"
-        return await q.edit_message_text("Введите @username получателя:")
-    stars=ctx.user_data["stars"]; price=round(stars*PRICE_PER_STAR)
+async def cb(u,c):
+    q=u.callback_query; await q.answer(); d=q.data
+    if d=="back":
+        c.user_data.clear()
+        return await q.edit_message_text("◀️ Возврат в главное меню. Используйте кнопки снизу.")
+    if d=="custom":
+        c.user_data["st"]="amount"
+        return await q.edit_message_text("Введите количество Stars:")
+    if d.startswith("p"):
+        s=int(d[1:]); p=round(s*PRICE)
+        kb=InlineKeyboardMarkup([
+          [InlineKeyboardButton("💳 СПБ",callback_data="spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="crypto")],
+          [InlineKeyboardButton("◀️ Назад",callback_data="back")]])
+        c.user_data["stars"]=s
+        return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {s} ⭐\nСтоимость: {p} ₽",reply_markup=kb)
+    if d=="premium":
+        kb=InlineKeyboardMarkup([
+          [InlineKeyboardButton("💳 Оплатить 999 ₽",callback_data="premium_spb")],
+          [InlineKeyboardButton("◀️ Назад",callback_data="back")]])
+        return await q.edit_message_text("💎 Premium StarsGo\n\nСтоимость: 999 ₽\nВыгода: скидка 25% на покупку Stars.",reply_markup=kb)
+    if d=="premium_spb":
+        return await q.edit_message_text("💳 Оплата Premium\n\nСумма: 999 ₽\nПосле оплаты отправьте чек @Lakizyx")
     if d=="spb":
-        return await q.edit_message_text(
-f"""💳 Оплата по СБП
-
-Получатель: @{ctx.user_data['target']}
-Сумма: {price} ₽
-
-После оплаты отправьте чек в @Lakizyx""")
+        s=c.user_data.get("stars",0); p=round(s*PRICE)
+        return await q.edit_message_text(f"💳 Оплата по СБП\n\nК оплате: {p} ₽\n\nПосле оплаты отправьте чек @Lakizyx")
     if d=="crypto":
-        return await q.edit_message_text(
-f"""💎 Оплата криптовалютой
-
-Сумма: {price} ₽
-
-Поддерживаются: USDT (TON), TON.
-
-Реквизиты выдаёт @Lakizyx после подтверждения.""")
+        s=c.user_data.get("stars",0); p=round(s*PRICE)
+        return await q.edit_message_text(f"💎 Оплата криптовалютой\n\nК оплате: {p} ₽\nUSDT (TON) / TON\n\nРеквизиты выдаёт @Lakizyx")
 
 app=Application.builder().token(TOKEN).build()
 app.add_handler(CommandHandler("start",start))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,on_text))
-app.add_handler(CallbackQueryHandler(on_callback))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,text))
+app.add_handler(CallbackQueryHandler(cb))
 app.run_polling()
