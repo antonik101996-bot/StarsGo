@@ -7,9 +7,12 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 TOKEN = os.getenv("BOT_TOKEN")
 ADMIN = "Lakizyx"
 PRICE_PER_STAR = 1.35
-
 db = sqlite3.connect("starsgo.db", check_same_thread=False)
-cur = db.cursor)
+cur = db.cursor()
+
+cur.execute("CREATE TABLE IF NOT EXISTS premium(username TEXT PRIMARY KEY)")
+db.commit()
+
 cur.execute("""
 CREATE TABLE IF NOT EXISTS balances (
     username TEXT PRIMARY KEY,
@@ -17,10 +20,6 @@ CREATE TABLE IF NOT EXISTS balances (
 )
 """)
 db.commit()
-cur.execute("CREATE TABLE IF NOT EXISTS premium(username TEXT PRIMARY KEY)")
-db.commit()
-cur.execute("INSERT OR IGNORE INTO premium VALUES(?)",(ADMIN.lower(),)); db.commit()
-
 def is_premium(username):
     if not username: return False
     return cur.execute("SELECT 1 FROM premium WHERE username=?",(username.lower(),)).fetchone() is not None
@@ -66,7 +65,7 @@ async def pay_menu(update,ctx):
     stars=ctx.user_data["stars"]; price=calc(stars, update.effective_user.username)
     kb=InlineKeyboardMarkup([
       [InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")],
-      [InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
+      [InlineKeyboardButton("◀️ Назад",allback_data="back_buy")]])
     await update.message.reply_text(f"🛒 Подтверждение\n\nКоличество: {stars} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
 async def text(update,ctx):
