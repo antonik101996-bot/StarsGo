@@ -41,10 +41,10 @@ async def profile(update:Update,ctx):
     u=update.effective_user
     txt=f"👤 Профиль\n\nИмя: {u.first_name}\nUsername: @{u.username or 'нет'}\nID: {u.id}\nPremium Telegram: {'Да' if u.is_premium else 'Нет'}\n\n"
     if is_premium(u.username):
-        txt += "🔥 У ВАС УЖЕ ЕСТЬ PREMIUM ПОДПИСКА\nСкидка 25% активна."
+        txt += "🔥 У ВАС УЖЕ ЕСТЬ PREMIUM ПОДПИСКА\nСкидка 20% активна."
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
     else:
-        txt += "💎 Premium StarsGo\n999 ₽ • Скидка 25%"
+        txt += "💎 Premium StarsGo\n999 ₽ • Скидка 20%"
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💎 Купить Premium",callback_data="premium")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
     await update.message.reply_text(txt, reply_markup=kb)
 
