@@ -102,31 +102,6 @@ async def pay_menu(update,ctx):
 
 async def text(update,ctx):
     t=update.message.text
-        if ctx.user_data.get("state")=="custom_amount":
-        if not t.isdigit():
-            return await update.message.reply_text("Введите число.")
-
-        ctx.user_data["stars"]=int(t)
-        ctx.user_data["state"]=None
-
-        price=calc(
-            ctx.user_data["stars"],
-            update.effective_user.username
-        )
-
-        kb=InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),
-                InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")
-            ]
-        ])
-
-        return await update.message.reply_text(
-            f"🛒 Подтверждение\n\n"
-            f"Количество: {ctx.user_data['stars']} ⭐\n"
-            f"Стоимость: {price} ₽",
-            reply_markup=kb
-        )
 
     if t=="⭐ Купить Stars":
         return await buy(update,ctx)
