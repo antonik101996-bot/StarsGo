@@ -187,6 +187,29 @@ async def admin_take(update, ctx):
         f"Снято: {amount:g}\n"
         f"Баланс: {new_balance:g}"
     )
+    async def admin_premium(update, ctx):
+    if update.effective_user.username != ADMIN:
+        return
+
+    if len(ctx.args) != 1:
+        return await update.message.reply_text(
+            "❌ Формат:\n/premium username"
+        )
+
+    username = ctx.args[0].lstrip("@").lower()
+
+    cur.execute(
+        "INSERT OR IGNORE INTO premium (username) VALUES (?)",
+        (username,)
+    )
+
+    db.commit()
+
+    await update.message.reply_text(
+        f"👑 Premium выдан\n\n"
+        f"Пользователь: @{username}\n"
+        f"Скидка: 25%"
+    )
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
     if d == "admin_users":
@@ -255,6 +278,7 @@ app=Application.builder().token(TOKEN).build()
 app.add_handler(CommandHandler("admin", admin))
 app.add_handler(CommandHandler("give", admin_give))
 app.add_handler(CommandHandler("take", admin_take))
+app.add_handler(CommandHandler("premium", admin_premium))
 app.add_handler(CommandHandler("start",start))
 app.add_handler(CommandHandler("premium",cmd_premium))
 app.add_handler(CommandHandler("unpremium",cmd_unpremium))
