@@ -73,7 +73,26 @@ async def text(update,ctx):
         if not t.isdigit(): return await update.message.reply_text("Введите число.")
         ctx.user_data["stars"]=int(t); ctx.user_data["state"]=None
         return await pay_menu(update,ctx)
+async def admin_give(update, ctx):
+    if update.effective_user.username != ADMIN:
+        return
 
+    await update.message.reply_text(
+        "➕ Выдать баланс\n\n"
+        "Использование:\n"
+        "/give ID СУММА"
+    )
+
+
+async def admin_take(update, ctx):
+    if update.effective_user.username != ADMIN:
+        return
+
+    await update.message.reply_text(
+        "➖ Снять баланс\n\n"
+        "Использование:\n"
+        "/take ID СУММА"
+    )
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
     if d == "admin_users":
