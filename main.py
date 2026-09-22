@@ -1,79 +1,80 @@
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 import os
-import telebot
-from telebot import types
 
 TOKEN = os.getenv("BOT_TOKEN")
-bot = telebot.TeleBot(TOKEN)
 
-PRICES = {
-    100: 138,
-    200: 276,
-    300: 414,
-    400: 552,
-    500: 690,
-    1000: 1380
-}
+PRICES = {100:138,200:276,300:414,400:552,500:690,1000:1380}
 
-def menu():
-    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.row("⭐ Купить Stars")
-    kb.row("👤 Профиль", "💬 Поддержка")
-    kb.row("📈 Курс Stars")
-    return kb
+menu = ReplyKeyboardMarkup(
+    [["⭐ Купить Stars"],
+     ["👤 Профиль","💬 Поддержка"],
+     ["📈 Курс Stars"]],
+    resize_keyboard=True
+)
 
-@bot.message_handler(commands=["start"])
-def start(msg):
-    bot.send_message(
-        msg.chat.id,
-        "✨ Добро пожаловать в StarsGo!",
-        reply_markup=menu()
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "✨ Добро пожаловать в StarsGo!\n\nВыберите действие:",
+        reply_markup=menu
     )
 
-@bot.message_handler(func=lambda m: m.text == "👤 Профиль")
-def profile(msg):
-    bot.send_message(msg.chat.id, f"👤 Ваш Telegram ID: {msg.from_user.id}")
+async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(f"👤 Ваш Telegram ID: {update.effective_user.id}")
 
-@bot.message_handler(func=lambda m: m.text == "💬 Поддержка")
-def support(msg):
-    bot.send_message(msg.chat.id, "💬 Поддержка: @Lakizyx")
+async def support(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("💬 Поддержка: @Lakizyx")
 
-@bot.message_handler(func=lambda m: m.text == "📈 Курс Stars")
-def rate(msg):
-    bot.send_message(msg.chat.id, "📈 Актуальный курс:\\n100 ⭐ = 138 ₽")
+async def rate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📈 Актуальный курс\n\n100 ⭐ = 138 ₽")
 
-@bot.message_handler(func=lambda m: m.text == "⭐ Купить Stars")
-def buy(msg):
-    kb = types.InlineKeyboardMarkup(row_width=2)
-    for s in [100,200,300,400,500,1000]:
-        kb.add(types.InlineKeyboardButton(f"{s} ⭐", callback_data=f"buy_{s}"))
-    bot.send_message(msg.chat.id, "⭐ Выберите пакет:", reply_markup=kb)
+async def buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("100 ⭐", callback_data="100"), InlineKeyboardButton("200 ⭐", callback_data="200")],
+        [InlineKeyboardButton("300 ⭐", callback_data="300"), InlineKeyboardButton("400 ⭐", callback_data="400")],
+        [InlineKeyboardButton("500 ⭐", callback_data="500"), InlineKeyboardButton("1000 ⭐", callback_data="1000")]
+    ])
+    await update.message.reply_text("⭐ Выберите пакет звёзд:", reply_markup=kb)
 
-@bot.callback_query_handler(func=lambda c: c.data.startswith("buy_"))
-def confirm(call):
-    stars = int(call.data.split("_")[1])
+async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    txt = update.message.text
+    if txt == "⭐ Купить Stars":
+        await buy(update, context)
+    elif txt == "👤 Профиль":
+        await profile(update, context)
+    elif txt == "💬 Поддержка":
+        await support(update, context)
+    elif txt == "📈 Курс Stars":
+        await rate(update, context)
+
+async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    data = q.data
+    if data.startswith("ok_"):
+        stars = int(data.split("_")[1])
+        price = PRICES[stars]
+        await q.edit_message_text(
+            f"✅ Заявка создана!\n\nПакет: {stars} ⭐\nСумма: {price} ₽\n\nДля оплаты напишите @Lakizyx"
+        )
+        return
+    stars = int(data)
     price = PRICES[stars]
-    kb = types.InlineKeyboardMarkup()
-    kb.add(types.InlineKeyboardButton("✅ Подтвердить покупку", callback_data=f"ok_{stars}"))
-    kb.add(types.InlineKeyboardButton("❌ Отмена", callback_data="cancel"))
-    bot.edit_message_text(
-        f"🛒 Вы покупаете {stars} ⭐ за {price} ₽.\\n\\nНажмите подтвердить.",
-        call.message.chat.id,
-        call.message.message_id,
+    kb = InlineKeyboardMarkup([[
+        InlineKeyboardButton("✅ Подтвердить покупку", callback_data=f"ok_{stars}")
+    ]])
+    await q.edit_message_text(
+        f"🛒 Подтверждение покупки\n\nВы покупаете {stars} ⭐ за {price} ₽.\n\nНажмите кнопку ниже для подтверждения.",
         reply_markup=kb
     )
 
-@bot.callback_query_handler(func=lambda c: c.data.startswith("ok_"))
-def done(call):
-    stars = int(call.data.split("_")[1])
-    price = PRICES[stars]
-    bot.edit_message_text(
-        f"✅ Заявка создана!\\n\\nПакет: {stars} ⭐\\nСумма: {price} ₽\\n\\nДля оплаты напишите @Lakizyx",
-        call.message.chat.id,
-        call.message.message_id
-    )
+def main():
+    app = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, buttons))
+    app.add_handler(CallbackQueryHandler(callbacks))
+    print("StarsGo запущен!")
+    app.run_polling()
 
-@bot.callback_query_handler(func=lambda c: c.data == "cancel")
-def cancel(call):
-    bot.edit_message_text("❌ Покупка отменена.", call.message.chat.id, call.message.message_id)
-
-bot.infinity_polling()
+if __name__ == "__main__":
+    main()
