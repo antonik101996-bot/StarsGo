@@ -198,12 +198,7 @@ async def admin_premium(update, ctx):
 
     username = ctx.args[0].lstrip("@").lower()
 
-    cur.execute(
-        "INSERT OR IGNORE INTO premium (username) VALUES (?)",
-        (username,)
-    )
-
-    db.commit()
+    give_premium(username)
 
     await update.message.reply_text(
         f"👑 Premium выдан\n\n"
