@@ -237,6 +237,38 @@ async def admin_premium(update, ctx):
         f"Пользователь: @{username}\n"
         f"Скидка: 20%"
     )
+
+def create_order(username, stars, rub_amount, usdt_amount, wallet):
+    order_id = str(uuid.uuid4())
+    memo = str(uuid.uuid4())
+
+    cur.execute("""
+    INSERT INTO orders (
+        order_id,
+        username,
+        stars,
+        rub_amount,
+        usdt_amount,
+        memo,
+        wallet,
+        created_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        order_id,
+        username.lower(),
+        stars,
+        rub_amount,
+        usdt_amount,
+        memo,
+        wallet,
+        int(time.time())
+    ))
+
+    db.commit()
+
+    return order_id, memo
+
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
     if d == "admin_users":
