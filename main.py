@@ -159,6 +159,8 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app=Application.builder().token(TOKEN).build()
 app.add_handler(CommandHandler("admin", admin))
+app.add_handler(CommandHandler("give", admin_give))
+app.add_handler(CommandHandler("take", admin_take))
 app.add_handler(CommandHandler("start",start))
 app.add_handler(CommandHandler("premium",cmd_premium))
 app.add_handler(CommandHandler("unpremium",cmd_unpremium))
