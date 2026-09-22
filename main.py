@@ -80,6 +80,15 @@ async def cb(update,ctx):
         cur.execute("SELECT COUNT(*) FROM premium")
         count = cur.fetchone()[0]
         return await q.message.reply_text(f"👤 Пользователи\n\nВсего: {count}")
+        if d == "admin_balances":
+        cur.execute("SELECT username FROM premium")
+        users = cur.fetchall()
+
+        text = "💰 Балансы\n\n"
+        for (username,) in users:
+            text += f"@{username}\n"
+
+        return await q.message.reply_text(text)
     if d=="back_profile": return await q.edit_message_text("👤 Закройте сообщение и используйте меню снизу.")
     if d=="back_buy":
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("300 ⭐",callback_data="s300")],[InlineKeyboardButton("500 ⭐",callback_data="s500")],[InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")]])
