@@ -4,8 +4,12 @@ import os, sqlite3, uuid, time
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = "..."
 ADMIN = "Lakizyx"
+
+TON_WALLET = "UQC37kiYVmmpT5GoYo6Ro3mIaaHFyZliwVOfVc0qgY0LuKGP"
+USDT_RATE = 84.33
+
 PRICE_PER_STAR = 1.35
 db = sqlite3.connect("starsgo.db", check_same_thread=False)
 cur = db.cursor()
