@@ -146,9 +146,29 @@ async def admin_take(update, ctx):
     )
 
     cur.execute(
-        "UPDATE balances SET balance = balance - ? WHERE username = ?",
-        (amount, username)
+        cur.execute(
+    "SELECT balance FROM balances WHERE username = ?",
+    (username,)
+)
+
+row = cur.fetchone()
+
+if not row:
+    return await update.message.reply_text("❌ Пользователь не найден.")
+
+balance = row[0]
+
+if amount > balance:
+    return await update.message.reply_text(
+        f"❌ Недостаточно средств.\n\n"
+        f"Баланс: {balance:g}\n"
+        f"Запрошено: {amount:g}"
     )
+
+cur.execute(
+    "UPDATE balances SET balance = balance - ? WHERE username = ?",
+    (amount, username)
+)
 
     db.commit()
 
