@@ -293,7 +293,6 @@ async def cb(update,ctx):
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
         return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
     if d=="pay_crypto":
-          if d=="pay_crypto":
           stars = ctx.user_data.get("stars")
 
           if not stars:
