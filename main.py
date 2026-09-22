@@ -80,6 +80,8 @@ async def cb(update,ctx):
         cur.execute("SELECT COUNT(*) FROM premium")
         count = cur.fetchone()[0]
         return await q.message.reply_text(f"👤 Пользователи\n\nВсего: {count}")
+        if d == "admin_balances":
+        return await q.message.reply_text("💰 Раздел балансов открыт")
         
     if d=="back_profile": return await q.edit_message_text("👤 Закройте сообщение и используйте меню снизу.")
     if d=="back_buy":
