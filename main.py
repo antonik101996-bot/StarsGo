@@ -100,56 +100,32 @@ async def pay_menu(update,ctx):
       [InlineKeyboardButton("◀️ Назад",allback_data="back_buy")]])
     await update.message.reply_text(f"🛒 Подтверждение\n\nКоличество: {stars} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
-async def text(update, ctx):
+async def text(update,ctx):
     t = update.message.text
 
     if t == "⭐ Купить Stars":
-        return await buy(update, ctx)
+        return await buy(update,ctx)
 
     if t == "👤 Профиль":
-        return await profile(update, ctx)
+        return await profile(update,ctx)
 
     if t == "📈 Курс Stars":
-        return await rate(update, ctx)
+        return await rate(update,ctx)
 
     if t == "💬 Поддержка":
-        return await support(update, ctx)
+        return await support(update,ctx)
 
-    # СВОЁ КОЛИЧЕСТВО
-if ctx.user_data.get("state") == "custom_amount":
-    if not t.isdigit():
-        return await update.message.reply_text("Введите число.")
-
-    stars = int(t)
-
-    if stars < 50 or stars > 5000:
-        return await update.message.reply_text(
-            "❌ Можно купить от 50 до 5000 ⭐ за одну транзакцию."
-        )
-
-    ctx.user_data["stars"] = stars
-    ctx.user_data["state"] = None
-
-    price = calc(stars, update.effective_user.username)
-
-    kb = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("💳 СПБ", callback_data="pay_spb"),
-            InlineKeyboardButton("💎 TON / USDT", callback_data="pay_crypto")
-        ],
-        [
-            InlineKeyboardButton("◀️ Назад", callback_data="back_buy")
-        ]
-    ])
-
-    return await update.message.reply_text(
-        f"🛒 Подтверждение\n\n"
-        f"Количество: {stars} ⭐\n"
-        f"Стоимость: {price} ₽",
-        reply_markup=kb
-    )
+    if ctx.user_data.get("state") == "custom_amount":
+        if not t.isdigit():
+            return await update.message.reply_text("Введите число.")
 
         stars = int(t)
+
+        if stars < 50 or stars > 5000:
+            return await update.message.reply_text(
+                "❌ Можно купить от 50 до 5000 ⭐ за одну транзакцию."
+            )
+
         ctx.user_data["stars"] = stars
         ctx.user_data["state"] = None
 
