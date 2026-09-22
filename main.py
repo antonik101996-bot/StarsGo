@@ -126,10 +126,44 @@ async def admin_take(update, ctx):
     if update.effective_user.username != ADMIN:
         return
 
+    if len(ctx.args) != 2:
+        return await update.message.reply_text(
+            "❌ Формат:\n/take username сумма"
+        )
+
+    username = ctx.args[0].lstrip("@").lower()
+
+    try:
+        amount = float(ctx.args[1])
+    except ValueError:
+        return await update.message.reply_text(
+            "❌ Сумма должна быть числом."
+        )
+
+    cur.execute(
+        "INSERT OR IGNORE INTO balances (username, balance) VALUES (?, 0)",
+        (username,)
+    )
+
+    cur.execute(
+        "UPDATE balances SET balance = balance - ? WHERE username = ?",
+        (amount, username)
+    )
+
+    db.commit()
+
+    cur.execute(
+        "SELECT balance FROM balances WHERE username = ?",
+        (username,)
+    )
+
+    balance = cur.fetchone()[0]
+
     await update.message.reply_text(
-        "➖ Снять баланс\n\n"
-        "Использование:\n"
-        "/take ID СУММА"
+        f"➖ Баланс уменьшен\n\n"
+        f"Пользователь: @{username}\n"
+        f"Снято: {amount:g}\n"
+        f"Баланс: {balance:g}"
     )
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
