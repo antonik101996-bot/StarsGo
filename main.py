@@ -140,35 +140,37 @@ async def admin_take(update, ctx):
             "❌ Сумма должна быть числом."
         )
 
+    if amount <= 0:
+        return await update.message.reply_text(
+            "❌ Сумма должна быть больше 0."
+        )
+
     cur.execute(
-        "INSERT OR IGNORE INTO balances (username, balance) VALUES (?, 0)",
+        "SELECT balance FROM balances WHERE username = ?",
         (username,)
     )
 
+    row = cur.fetchone()
+
+    if not row:
+        return await update.message.reply_text(
+            f"❌ Пользователь @{username} не найден."
+        )
+
+    balance = row[0]
+
+    if amount > balance:
+        return await update.message.reply_text(
+            f"❌ Недостаточно средств.\n\n"
+            f"Пользователь: @{username}\n"
+            f"Баланс: {balance:g}\n"
+            f"Запрошено: {amount:g}"
+        )
+
     cur.execute(
-        cur.execute(
-    "SELECT balance FROM balances WHERE username = ?",
-    (username,)
-)
-
-row = cur.fetchone()
-
-if not row:
-    return await update.message.reply_text("❌ Пользователь не найден.")
-
-balance = row[0]
-
-if amount > balance:
-    return await update.message.reply_text(
-        f"❌ Недостаточно средств.\n\n"
-        f"Баланс: {balance:g}\n"
-        f"Запрошено: {amount:g}"
+        "UPDATE balances SET balance = balance - ? WHERE username = ?",
+        (amount, username)
     )
-
-cur.execute(
-    "UPDATE balances SET balance = balance - ? WHERE username = ?",
-    (amount, username)
-)
 
     db.commit()
 
@@ -177,13 +179,13 @@ cur.execute(
         (username,)
     )
 
-    balance = cur.fetchone()[0]
+    new_balance = cur.fetchone()[0]
 
     await update.message.reply_text(
         f"➖ Баланс уменьшен\n\n"
         f"Пользователь: @{username}\n"
         f"Снято: {amount:g}\n"
-        f"Баланс: {balance:g}"
+        f"Баланс: {new_balance:g}"
     )
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
