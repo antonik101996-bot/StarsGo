@@ -29,7 +29,7 @@ def remove_premium(username):
     cur.execute("DELETE FROM premium WHERE username=?",(username.lower(),)); db.commit()
 def calc(stars, username):
     p = round(stars * PRICE_PER_STAR)
-    return round(p * 0.75) if is_premium(username) else p
+    return round(p * 0.80) if is_premium(username) else p
 
 MENU = ReplyKeyboardMarkup([["⭐ Купить Stars"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"]], resize_keyboard=True)
 
