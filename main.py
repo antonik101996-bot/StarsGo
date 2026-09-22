@@ -1,26 +1,117 @@
-# StarsGo V3 (skeleton)
-# Features: Premium, Admin panel, History, Promo, Referrals, Platega hooks
-# Replace BOT_TOKEN in Railway Variables.
-from telegram import *
-from telegram.ext import *
-import sqlite3, os
+# StarsGo V2 - main.py
+# python-telegram-bot 20+
+import os, sqlite3
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-TOKEN=os.getenv("BOT_TOKEN")
-ADMIN="Lakizyx"
-PRICE=1.38
-db=sqlite3.connect("starsgo.db",check_same_thread=False)
-c=db.cursor()
-c.executescript("""
-CREATE TABLE IF NOT EXISTS premium(username TEXT PRIMARY KEY);
-CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, username TEXT, ref TEXT);
-CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, stars INT, price INT, status TEXT);
-CREATE TABLE IF NOT EXISTS promos(code TEXT PRIMARY KEY, discount INT);
-""")
+TOKEN = os.getenv("BOT_TOKEN")
+ADMIN = "Lakizyx"
+PRICE_PER_STAR = 1.38
+
+db = sqlite3.connect("starsgo.db", check_same_thread=False)
+cur = db.cursor()
+cur.execute("CREATE TABLE IF NOT EXISTS premium(username TEXT PRIMARY KEY)")
 db.commit()
+cur.execute("INSERT OR IGNORE INTO premium VALUES(?)",(ADMIN.lower(),)); db.commit()
 
-# TODO: Full handlers
-# /admin -> 👑 Premium ❌ Remove 📈 Rate 📦 Orders 💰 Stats 📢 Broadcast
-# /premium @user
-# /unpremium @user
-# Buy Stars + Platega webhook
-print("StarsGo V3 scaffold")
+def is_premium(username):
+    if not username: return False
+    return cur.execute("SELECT 1 FROM premium WHERE username=?",(username.lower(),)).fetchone() is not None
+def give_premium(username):
+    cur.execute("INSERT OR IGNORE INTO premium VALUES(?)",(username.lower(),)); db.commit()
+def remove_premium(username):
+    cur.execute("DELETE FROM premium WHERE username=?",(username.lower(),)); db.commit()
+def calc(stars, username):
+    p = round(stars * PRICE_PER_STAR)
+    return round(p * 0.75) if is_premium(username) else p
+
+MENU = ReplyKeyboardMarkup([["⭐ Купить Stars"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"]], resize_keyboard=True)
+
+async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    ctx.user_data.clear()
+    await update.message.reply_text("✨ Добро пожаловать в StarsGo!", reply_markup=MENU)
+
+async def profile(update:Update,ctx):
+    u=update.effective_user
+    txt=f"👤 Профиль\n\nИмя: {u.first_name}\nUsername: @{u.username or 'нет'}\nID: {u.id}\nPremium Telegram: {'Да' if u.is_premium else 'Нет'}\n\n"
+    if is_premium(u.username):
+        txt += "🔥 У ВАС УЖЕ ЕСТЬ PREMIUM ПОДПИСКА\nСкидка 25% активна."
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
+    else:
+        txt += "💎 Premium StarsGo\n999 ₽ • Скидка 25%"
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💎 Купить Premium",callback_data="premium")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
+    await update.message.reply_text(txt, reply_markup=kb)
+
+async def buy(update:Update,ctx):
+    kb=InlineKeyboardMarkup([
+      [InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("300 ⭐",callback_data="s300")],
+      [InlineKeyboardButton("500 ⭐",callback_data="s500")],
+      [InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")]])
+    await update.message.reply_text("⭐ Выберите количество Stars:", reply_markup=kb)
+
+async def rate(update,ctx):
+    await update.message.reply_text("📈 Курс Stars\n\n100 ⭐ = 138 ₽\nКурс периодически меняется.")
+
+async def support(update,ctx):
+    await update.message.reply_text("💬 Поддержка\n\n@Lakizyx")
+
+async def pay_menu(update,ctx):
+    stars=ctx.user_data["stars"]; price=calc(stars, update.effective_user.username)
+    kb=InlineKeyboardMarkup([
+      [InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")],
+      [InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
+    await update.message.reply_text(f"🛒 Подтверждение\n\nКоличество: {stars} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
+
+async def text(update,ctx):
+    t=update.message.text
+    if t=="⭐ Купить Stars": return await buy(update,ctx)
+    if t=="👤 Профиль": return await profile(update,ctx)
+    if t=="📈 Курс Stars": return await rate(update,ctx)
+    if t=="💬 Поддержка": return await support(update,ctx)
+    st=ctx.user_data.get("state")
+    if st=="custom_amount":
+        if not t.isdigit(): return await update.message.reply_text("Введите число.")
+        ctx.user_data["stars"]=int(t); ctx.user_data["state"]=None
+        return await pay_menu(update,ctx)
+
+async def cb(update,ctx):
+    q=update.callback_query; await q.answer(); d=q.data
+    if d=="back_profile": return await q.edit_message_text("👤 Закройте сообщение и используйте меню снизу.")
+    if d=="back_buy":
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("300 ⭐",callback_data="s300")],[InlineKeyboardButton("500 ⭐",callback_data="s500")],[InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")]])
+        return await q.edit_message_text("⭐ Выберите количество Stars:", reply_markup=kb)
+    if d=="custom":
+        ctx.user_data["state"]="custom_amount"
+        return await q.edit_message_text("✏️ Введите количество Stars:")
+    if d.startswith("s"):
+        ctx.user_data["stars"]=int(d[1:])
+        price=calc(ctx.user_data["stars"], q.from_user.username)
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
+        return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
+    if d=="premium":
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="prem_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="prem_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
+        return await q.edit_message_text("💎 Premium StarsGo\n\n999 ₽\nСкидка 25% на все покупки.", reply_markup=kb)
+    if d=="prem_spb": return await q.edit_message_text("💳 Premium\n999 ₽\nПосле оплаты: @Lakizyx")
+    if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
+    if d=="pay_spb":
+        return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
+    if d=="pay_crypto":
+        return await q.edit_message_text(f"💎 TON / USDT\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
+async def cmd_premium(update,ctx):
+    if update.effective_user.username!=ADMIN: return
+    p=update.message.text.split()
+    if len(p)!=2: return await update.message.reply_text("Используй: /premium @user")
+    give_premium(p[1].replace("@","")); await update.message.reply_text("👑 Premium выдан")
+async def cmd_unpremium(update,ctx):
+    if update.effective_user.username!=ADMIN: return
+    p=update.message.text.split()
+    if len(p)!=2: return await update.message.reply_text("Используй: /unpremium @user")
+    remove_premium(p[1].replace("@","")); await update.message.reply_text("❌ Premium снят")
+
+app=Application.builder().token(TOKEN).build()
+app.add_handler(CommandHandler("start",start))
+app.add_handler(CommandHandler("premium",cmd_premium))
+app.add_handler(CommandHandler("unpremium",cmd_unpremium))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,text))
+app.add_handler(CallbackQueryHandler(cb))
+app.run_polling()
