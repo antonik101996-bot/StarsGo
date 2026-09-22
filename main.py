@@ -210,28 +210,7 @@ async def admin_take(update, ctx):
         f"Пользователь: @{username}\n"
         f"Скидка: 25%"
     )
-    async def admin_unpremium(update, ctx):
-    if update.effective_user.username != ADMIN:
-        return
-
-    if len(ctx.args) != 1:
-        return await update.message.reply_text(
-            "❌ Формат:\n/unpremium username"
-        )
-
-    username = ctx.args[0].lstrip("@").lower()
-
-    cur.execute(
-        "DELETE FROM premium WHERE username = ?",
-        (username,)
-    )
-
-    db.commit()
-
-    await update.message.reply_text(
-        f"❌ Premium снят\n\n"
-        f"Пользователь: @{username}"
-    )
+    
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
     if d == "admin_users":
@@ -301,7 +280,6 @@ app.add_handler(CommandHandler("admin", admin))
 app.add_handler(CommandHandler("give", admin_give))
 app.add_handler(CommandHandler("take", admin_take))
 app.add_handler(CommandHandler("premium", admin_premium))
-app.add_handler(CommandHandler("unpremium", admin_unpremium))
 app.add_handler(CommandHandler("start",start))
 app.add_handler(CommandHandler("premium",cmd_premium))
 app.add_handler(CommandHandler("unpremium",cmd_unpremium))
