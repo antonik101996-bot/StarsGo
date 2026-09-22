@@ -187,7 +187,7 @@ async def admin_take(update, ctx):
         f"Снято: {amount:g}\n"
         f"Баланс: {new_balance:g}"
     )
-    async def admin_premium(update, ctx):
+async def admin_premium(update, ctx):
     if update.effective_user.username != ADMIN:
         return
 
@@ -210,7 +210,6 @@ async def admin_take(update, ctx):
         f"Пользователь: @{username}\n"
         f"Скидка: 25%"
     )
-    
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
     if d == "admin_users":
