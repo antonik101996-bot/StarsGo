@@ -332,31 +332,34 @@ async def cb(update,ctx):
         price=calc(ctx.user_data["stars"], q.from_user.username)
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
         return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
-    if d=="pay_crypto":
-          stars = ctx.user_data.get("stars")
+if d=="pay_crypto":
+    stars = ctx.user_data.get("stars")
 
-          if not stars:
-              return await q.edit_message_text("❌ Не выбрано количество Stars.")
+    if not stars:
+        return await q.edit_message_text("❌ Не выбрано количество Stars.")
 
-          rub_amount = calc(stars, q.from_user.username)
-          usdt_amount = round(rub_amount / 84.50, 2)
+    rub_amount = calc(stars, q.from_user.username)
+    usdt_amount = round(rub_amount / USDT_RATE, 2)
 
-          order_id, memo = create_order(
-              q.from_user.username or str(q.from_user.id),
-              stars,
-              rub_amount,
-              usdt_amount,
-              "TEST_WALLET"
-          )
+    order_id, memo = create_order(
+        q.from_user.username or str(q.from_user.id),
+        stars,
+        rub_amount,
+        usdt_amount,
+        TON_WALLET
+    )
 
-          return await q.edit_message_text(
-              f"💎 TON / USDT\n\n"
-              f"⭐ Stars: {stars}\n"
-              f"💰 К оплате: {rub_amount} ₽\n"
-              f"💵 USDT: {usdt_amount}\n\n"
-              f"📝 Memo: {memo}\n\n"
-              f"🆔 Заказ: {order_id}"
-          )
+    return await q.edit_message_text(
+        f"🤖 Счёт USDT (TON)\n\n"
+        f"➕ Получатель: @{ADMIN}\n"
+        f"🎁 Товар: {stars} ⭐\n"
+        f"👛 Сумма: {rub_amount} ₽\n\n"
+        f"❗️ После успешной оплаты бот автоматически обработает ваш заказ\n\n"
+        f"💷 Переведите ТОЧНУЮ СУММУ: {usdt_amount} USDT (TON)\n\n"
+        f"👛 На кошелёк:\n{TON_WALLET}\n\n"
+        f"⚠️ В кошельке выберите токен USDT (jetton на TON)\n\n"
+        f"💬 ОБЯЗАТЕЛЬНО укажите MEMO:\n{memo}"
+    )
     if d=="premium":
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="prem_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="prem_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
         return await q.edit_message_text("💎 Premium StarsGo\n\n999 ₽\nСкидка 20% на все покупки.", reply_markup=kb)
