@@ -116,9 +116,38 @@ async def text(update, ctx):
         return await support(update, ctx)
 
     # СВОЁ КОЛИЧЕСТВО
-    if ctx.user_data.get("state") == "custom_amount":
-        if not t.isdigit():
-            return await update.message.reply_text("Введите число.")
+if ctx.user_data.get("state") == "custom_amount":
+    if not t.isdigit():
+        return await update.message.reply_text("Введите число.")
+
+    stars = int(t)
+
+    if stars < 50 or stars > 5000:
+        return await update.message.reply_text(
+            "❌ Можно купить от 50 до 5000 ⭐ за одну транзакцию."
+        )
+
+    ctx.user_data["stars"] = stars
+    ctx.user_data["state"] = None
+
+    price = calc(stars, update.effective_user.username)
+
+    kb = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("💳 СПБ", callback_data="pay_spb"),
+            InlineKeyboardButton("💎 TON / USDT", callback_data="pay_crypto")
+        ],
+        [
+            InlineKeyboardButton("◀️ Назад", callback_data="back_buy")
+        ]
+    ])
+
+    return await update.message.reply_text(
+        f"🛒 Подтверждение\n\n"
+        f"Количество: {stars} ⭐\n"
+        f"Стоимость: {price} ₽",
+        reply_markup=kb
+    )
 
         stars = int(t)
         ctx.user_data["stars"] = stars
