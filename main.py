@@ -20,6 +20,22 @@ CREATE TABLE IF NOT EXISTS orders (
     stars INTEGER NOT NULL,
     rub_amount REAL NOT NULL,
     usdt_amount REAL NOT NULL,
+    memo TEXT UNIQUE NOT NULL,
+    wallet TEXT NOT NULL,
+    status TEXT DEFAULT 'pending',
+    created_at INTEGER,
+    paid_at INTEGER
+)
+""")
+db.commit()
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS orders (
+    order_id TEXT PRIMARY KEY,
+    username TEXT NOT NULL,
+    stars INTEGER NOT NULL,
+    rub_amount REAL NOT NULL,
+    usdt_amount REAL NOT NULL,
     memo TEXT NOT NULL UNIQUE,
     wallet TEXT NOT NULL,
     status TEXT DEFAULT 'pending',
