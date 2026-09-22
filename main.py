@@ -208,7 +208,7 @@ async def admin_premium(update, ctx):
     await update.message.reply_text(
         f"👑 Premium выдан\n\n"
         f"Пользователь: @{username}\n"
-        f"Скидка: 25%"
+        f"Скидка: 20%"
     )
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
@@ -235,7 +235,7 @@ async def cb(update,ctx):
         return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
     if d=="premium":
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="prem_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="prem_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
-        return await q.edit_message_text("💎 Premium StarsGo\n\n999 ₽\nСкидка 25% на все покупки.", reply_markup=kb)
+        return await q.edit_message_text("💎 Premium StarsGo\n\n999 ₽\nСкидка 20% на все покупки.", reply_markup=kb)
     if d=="prem_spb": return await q.edit_message_text("💳 Premium\n999 ₽\nПосле оплаты: @Lakizyx")
     if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
     if d=="pay_spb":
