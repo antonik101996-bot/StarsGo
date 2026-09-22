@@ -1,19 +1,67 @@
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import CommandStart
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 import os
 
-bot = Bot(os.getenv("BOT_TOKEN"))
-dp = Dispatcher()
+TOKEN = os.getenv("BOT_TOKEN")
 
-kb = ReplyKeyboardBuilder()
-kb.button(text="⭐ Купить Stars")
-kb.button(text="👤 Профиль")
-kb.button(text="💬 Поддержка")
-kb.button(text="📈 Курс Stars")
-kb.adjust(1, 2, 1)
-@dp.message(CommandStart())
-async def start(msg: types.Message):
-    await msg.answer(
-        "Добро пожаловать в StarsGo! 🚀",
-        reply_markup=kb.as_markup(resize_keyboard=True)
+keyboard = ReplyKeyboardMarkup(
+    [
+        ["⭐ Купить Stars"],
+        ["👤 Профиль", "💬 Поддержка"],
+        ["📈 Курс Stars"],
+    ],
+    resize_keyboard=True,
+)
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🚀 Добро пожаловать в StarsGo!\n\nВыберите действие:",
+        reply_markup=keyboard,
+    )
+
+async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+
+    if text == "⭐ Купить Stars":
+        await update.message.reply_text(
+            "⭐ Доступные пакеты:\n\n"
+            "100 ⭐ — 138 ₽\n"
+            "250 ⭐ — 345 ₽\n"
+            "500 ⭐ — 690 ₽\n"
+            "1000 ⭐ — 1380 ₽"
+        )
+
+    elif text == "👤 Профиль":
+        await update.message.reply_text(
+            f"👤 Ваш Telegram ID: {update.effective_user.id}"
+        )
+
+    elif text == "💬 Поддержка":
+        await update.message.reply_text(
+            "💬 Поддержка: @StarsGoSupport"
+        )
+
+    elif text == "📈 Курс Stars":
+        await update.message.reply_text(
+            "📈 Актуальный курс:\n100 ⭐ = 138 ₽"
+        )
+
+def main():
+    app = Application.builder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, buttons)
+    )
+
+    print("StarsGo запущен!")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
