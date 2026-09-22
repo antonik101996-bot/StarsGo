@@ -83,11 +83,44 @@ async def admin_give(update, ctx):
     if update.effective_user.username != ADMIN:
         return
 
+    if len(ctx.args) != 2:
+        return await update.message.reply_text(
+            "❌ Формат:\n/give username сумма"
+        )
+
+    username = ctx.args[0].lstrip("@").lower()
+
+    try:
+        amount = float(ctx.args[1])
+    except ValueError:
+        return await update.message.reply_text(
+            "❌ Сумма должна быть числом."
+        )
+
+    cur.execute(
+        "INSERT OR IGNORE INTO balances (username, balance) VALUES (?, 0)",
+        (username,)
+    )
+
+    cur.execute(
+        "UPDATE balances SET balance = balance + ? WHERE username = ?",
+        (amount, username)
+    )
+
+    db.commit()
+
+    cur.execute(
+        "SELECT balance FROM balances WHERE username = ?",
+        (username,)
+    )
+
+    balance = cur.fetchone()[0]
+
     await update.message.reply_text(
-        "➕ Выдать баланс\n\n"
-        "Пока проверяем команду.\n"
-        "Напиши:\n"
-        "/give Lakizyx 100"
+        f"➕ Баланс пополнен\n\n"
+        f"Пользователь: @{username}\n"
+        f"Начислено: {amount:g}\n"
+        f"Баланс: {balance:g}"
     )
 async def admin_take(update, ctx):
     if update.effective_user.username != ADMIN:
