@@ -1,0 +1,2 @@
+ADMIN="Lakizyx"
+DEFAULT_RATE=1.38

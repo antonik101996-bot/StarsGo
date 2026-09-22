@@ -1,1 +1,1 @@
-# StarsGo\n\nМинимальный Telegram бот для Railway.\n
+StarsGo V3 scaffold with admin panel structure.
