@@ -102,14 +102,28 @@ async def pay_menu(update,ctx):
 
 async def text(update,ctx):
     t=update.message.text
-    if t=="⭐ Купить Stars": return await buy(update,ctx)
-    if t=="👤 Профиль": return await profile(update,ctx)
-    if t=="📈 Курс Stars": return await rate(update,ctx)
-    if t=="💬 Поддержка": return await support(update,ctx)
+
+    if t=="⭐ Купить Stars":
+        return await buy(update,ctx)
+
+    if t=="👤 Профиль":
+        return await profile(update,ctx)
+
+    if t=="📈 Курс Stars":
+        return await rate(update,ctx)
+
+    if t=="💬 Поддержка":
+        return await support(update,ctx)
+
     st=ctx.user_data.get("state")
+
     if st=="custom_amount":
-        if not t.isdigit(): return await update.message.reply_text("Введите число.")
-        ctx.user_data["stars"]=int(t); ctx.user_data["state"]=None
+        if not t.isdigit():
+            return await update.message.reply_text("Введите число.")
+
+        ctx.user_data["stars"]=int(t)
+        ctx.user_data["state"]=None
+
         return await pay_menu(update,ctx)
 async def admin_give(update, ctx):
     if update.effective_user.username != ADMIN:
