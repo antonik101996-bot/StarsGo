@@ -100,31 +100,48 @@ async def pay_menu(update,ctx):
       [InlineKeyboardButton("◀️ Назад",allback_data="back_buy")]])
     await update.message.reply_text(f"🛒 Подтверждение\n\nКоличество: {stars} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
-async def text(update,ctx):
-    t=update.message.text
+async def text(update, ctx):
+    t = update.message.text
 
-    if t=="⭐ Купить Stars":
-        return await buy(update,ctx)
+    if t == "⭐ Купить Stars":
+        return await buy(update, ctx)
 
-    if t=="👤 Профиль":
-        return await profile(update,ctx)
+    if t == "👤 Профиль":
+        return await profile(update, ctx)
 
-    if t=="📈 Курс Stars":
-        return await rate(update,ctx)
+    if t == "📈 Курс Stars":
+        return await rate(update, ctx)
 
-    if t=="💬 Поддержка":
-        return await support(update,ctx)
+    if t == "💬 Поддержка":
+        return await support(update, ctx)
 
-    st=ctx.user_data.get("state")
-
-    if st=="custom_amount":
+    # СВОЁ КОЛИЧЕСТВО
+    if ctx.user_data.get("state") == "custom_amount":
         if not t.isdigit():
             return await update.message.reply_text("Введите число.")
 
-        ctx.user_data["stars"]=int(t)
-        ctx.user_data["state"]=None
+        stars = int(t)
+        ctx.user_data["stars"] = stars
+        ctx.user_data["state"] = None
 
-        return await pay_menu(update,ctx)
+        price = calc(stars, update.effective_user.username)
+
+        kb = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("💳 СПБ", callback_data="pay_spb"),
+                InlineKeyboardButton("💎 TON / USDT", callback_data="pay_crypto")
+            ],
+            [
+                InlineKeyboardButton("◀️ Назад", callback_data="back_buy")
+            ]
+        ])
+
+        return await update.message.reply_text(
+            f"🛒 Подтверждение\n\n"
+            f"Количество: {stars} ⭐\n"
+            f"Стоимость: {price} ₽",
+            reply_markup=kb
+        )
 async def admin_give(update, ctx):
     if update.effective_user.username != ADMIN:
         return
