@@ -76,6 +76,10 @@ async def text(update,ctx):
 
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
+    if d == "admin_users":
+        cur.execute("SELECT COUNT(*) FROM premium")
+        count = cur.fetchone()[0]
+        return await q.message.reply_text(f"👤 Пользователи\n\nВсего: {count}")
     if d=="back_profile": return await q.edit_message_text("👤 Закройте сообщение и используйте меню снизу.")
     if d=="back_buy":
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("300 ⭐",callback_data="s300")],[InlineKeyboardButton("500 ⭐",callback_data="s500")],[InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")]])
