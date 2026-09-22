@@ -1,6 +1,7 @@
 # StarsGo V2 - main.py
 # python-telegram-bot 20+
 import os, sqlite3, uuid, time
+import requests
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
@@ -309,6 +310,25 @@ def create_order(username, stars, rub_amount, usdt_amount, wallet):
     db.commit()
 
     return order_id, memo
+    
+def check_payment(memo, usdt_amount):
+    url = f"https://toncenter.com/api/v3/transactions?account={TON_WALLET}&limit=30"
+
+    headers = {"X-API-Key": TONCENTER_API}
+
+    try:
+        data = requests.get(url, headers=headers, timeout=10).json()
+    except:
+        return False
+
+    for tx in data.get("transactions", []):
+        comment = tx.get("comment", "")
+        amount = float(tx.get("amount", 0)) / 1000000
+
+        if comment == memo and abs(amount - usdt_amount) <= 0.01:
+            return True
+
+    return False
 
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
