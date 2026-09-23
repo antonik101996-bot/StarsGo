@@ -56,11 +56,14 @@ def get_menu(username):
 
 async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data.clear()
-    await update.message.reply_text("✨ Добро пожаловать в StarsGo!", reply_markup=get_menu(update.effective_user.username))
+    await update.message.reply_text("🚀 *StarsGo V2*\n\nПокупайте Stars и Telegram Premium быстро и безопасно.", reply_markup=get_menu(update.effective_user.username), parse_mode="Markdown")
 
 async def profile(update:Update,ctx):
     u=update.effective_user
-    txt=f"👤 Профиль\n\nИмя: {u.first_name}\nUsername: @{u.username or 'нет'}\nID: {u.id}\nPremium Telegram: {'Да' if u.is_premium else 'Нет'}\n\n"
+    bal=cur.execute("SELECT balance FROM balances WHERE username=?",( (u.username or "").lower(),)).fetchone()
+    balance=bal[0] if bal else 0
+    cnt=cur.execute("SELECT COUNT(*) FROM orders WHERE username=?",( (u.username or "").lower(),)).fetchone()[0]
+    txt=f"👤 Профиль\n\nИмя: {u.first_name}\nUsername: @{u.username or 'нет'}\nID: {u.id}\nPremium Telegram: {'Да' if u.is_premium else 'Нет'}\nБаланс: {balance:g} ₽\nЗаказов: {cnt}\n\n"
     if is_premium(u.username):
         txt += "🔥 У ВАС УЖЕ ЕСТЬ PREMIUM ПОДПИСКА\nСкидка 20% активна."
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
@@ -79,7 +82,7 @@ async def buy(update:Update,ctx):
 
 async def rate(update,ctx):
     await update.message.reply_text(
-        f"📈 Курс Stars 1 ⭐ = {PRICE_PER_STAR:.2f} ₽"
+        f"📈 Курс Stars\n\n1 ⭐ = {PRICE_PER_STAR:.2f} ₽"
     )
 
 async def support(update,ctx):
@@ -89,7 +92,7 @@ async def pay_menu(update,ctx):
     stars=ctx.user_data["stars"]; price=calc(stars, update.effective_user.username)
     kb=InlineKeyboardMarkup([
       [InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],
-      [InlineKeyboardButton("◀️ Назад",allback_data="back_buy")]])
+      [InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
     await update.message.reply_text(f"🛒 Подтверждение\n\nКоличество: {stars} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
 async def text(update,ctx):
@@ -161,7 +164,7 @@ async def text(update,ctx):
                 InlineKeyboardButton("💎 TON / USDT", callback_data="pay_crypto")
             ],
             [
-                InlineKeyboardButton("◀️ Назад", callback_data="back_buy")
+                InlineKeyboardButton("◀️ Назад", ccallback_data="back_buy")
             ]
         ])
 
@@ -384,7 +387,7 @@ async def cb(update,ctx):
     if d.startswith("s"):
         ctx.user_data["stars"]=int(d[1:])
         price=calc(ctx.user_data["stars"], q.from_user.username)
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",ccallback_data="back_buy")]])
         return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
 
@@ -392,7 +395,7 @@ async def cb(update,ctx):
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("🪙 GRAM (TON)", callback_data="pay_grm")],
             [InlineKeyboardButton("💵 USDT (TON)", callback_data="pay_usdt")],
-            [InlineKeyboardButton("◀️ Назад", callback_data="back_buy")]
+            [InlineKeyboardButton("◀️ Назад", ccallback_data="back_buy")]
         ])
         return await q.edit_message_text(
             "💎 Криптовалюта\n\nВыберите валюту:",
