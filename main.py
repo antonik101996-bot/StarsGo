@@ -304,8 +304,8 @@ def check_payment(memo, usdt_amount):
     return False
 
 async def cb(update,ctx):
-    q=update.callback_query
-    d=q.data
+    q = update.callback_query
+    d = q.data
     if d == "admin_users":
         cur.execute("SELECT COUNT(*) FROM premium")
         count = cur.fetchone()[0]
@@ -410,8 +410,6 @@ async def cb(update,ctx):
     if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
     if d=="pay_spb":
         return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
-    if d=="pay_crypto":
-        return await q.edit_message_text(f"💎 TON / USDT\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
 async def cmd_premium(update,ctx):
     if update.effective_user.username!=ADMIN: return
     p=update.message.text.split()
