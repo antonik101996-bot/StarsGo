@@ -49,62 +49,62 @@ def calc(stars, username):
     return round(p * 0.80) if is_premium(username) else p
 
 def get_menu(username):
-    rows=[["в­ђ РљСѓРїРёС‚СЊ Stars"],["рџ‘‘ Telegram Premium"],["рџ‘¤ РџСЂРѕС„РёР»СЊ","рџ“€ РљСѓСЂСЃ Stars"],["рџ“¦ РњРѕРё Р·Р°РєР°Р·С‹","рџ’¬ РџРѕРґРґРµСЂР¶РєР°"]]
+    rows=[["⭐ Купить Stars"],["👑 Telegram Premium"],["👤 Профиль","📈 Курс Stars"],["📦 Мои заказы","💬 Поддержка"]]
     if username==ADMIN:
-        rows.append(["вљ™пёЏ РђРґРјРёРЅ"])
+        rows.append(["⚙️ Админ"])
     return ReplyKeyboardMarkup(rows, resize_keyboard=True)
 
 async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data.clear()
-    await update.message.reply_text("вњЁ *StarsGo V4 PRO*\nв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓ\nв­ђ РџРѕРєСѓРїРєР° Stars\nрџ‘‘ Telegram Premium\nрџ’Ћ GRAM / USDT\nв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓв”Ѓ\nР’С‹Р±РµСЂРёС‚Рµ СЂР°Р·РґРµР» РІ РјРµРЅСЋ РЅРёР¶Рµ.", reply_markup=get_menu(update.effective_user.username), parse_mode="Markdown")
+    await update.message.reply_text("✨ *StarsGo V4 PRO*\n━━━━━━━━━━\n⭐ Покупка Stars\n👑 Telegram Premium\n💎 GRAM / USDT\n━━━━━━━━━━\nВыберите раздел в меню ниже.", reply_markup=get_menu(update.effective_user.username), parse_mode="Markdown")
 
 async def profile(update:Update,ctx):
     u=update.effective_user
     bal=cur.execute("SELECT balance FROM balances WHERE username=?",( (u.username or "").lower(),)).fetchone()
     balance=bal[0] if bal else 0
     cnt=cur.execute("SELECT COUNT(*) FROM orders WHERE username=?",( (u.username or "").lower(),)).fetchone()[0]
-    txt=f"рџЊџ *РџСЂРѕС„РёР»СЊ StarsGo*\n\nРРјСЏ: {u.first_name}\nUsername: @{u.username or 'РЅРµС‚'}\nID: {u.id}\nPremium Telegram: {'Р”Р°' if u.is_premium else 'РќРµС‚'}\nР‘Р°Р»Р°РЅСЃ: {balance:g} в‚Ѕ\nР—Р°РєР°Р·РѕРІ: {cnt}\n\n"
+    txt=f"🌟 *Профиль StarsGo*\n\nИмя: {u.first_name}\nUsername: @{u.username or 'нет'}\nID: {u.id}\nPremium Telegram: {'Да' if u.is_premium else 'Нет'}\nБаланс: {balance:g} ₽\nЗаказов: {cnt}\n\n"
     if is_premium(u.username):
-        txt += "рџ”Ґ РЈ Р’РђРЎ РЈР–Р• Р•РЎРўР¬ PREMIUM РџРћР”РџРРЎРљРђ\nРЎРєРёРґРєР° 20% Р°РєС‚РёРІРЅР°."
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("в—ЂпёЏ РќР°Р·Р°Рґ",callback_data="back_profile")]])
+        txt += "🔥 У ВАС УЖЕ ЕСТЬ PREMIUM ПОДПИСКА\nСкидка 20% активна."
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
     else:
-        txt += "рџ‘‘ Premium StarsGo\n\nвЂў РџРѕРґРїРёСЃРєР°: 1 РјРµСЃСЏС†\nвЂў РЎРєРёРґРєР° 20% РЅР° РІСЃРµ Stars\nвЂў Р‘РµР·Р»РёРјРёС‚РЅР°СЏ РїРѕРєСѓРїРєР° Stars"
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("рџ‘‘ Premium StarsGo",callback_data="premium")],[InlineKeyboardButton("в—ЂпёЏ РќР°Р·Р°Рґ",callback_data="back_profile")]])
+        txt += "👑 Premium StarsGo\n\n• Подписка: 1 месяц\n• Скидка 20% на все Stars\n• Безлимитная покупка Stars"
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("👑 Premium StarsGo",callback_data="premium")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
     await update.message.reply_text(txt, reply_markup=kb)
 
 async def buy(update:Update,ctx):
     kb=InlineKeyboardMarkup([
-      [InlineKeyboardButton("100 в­ђ",callback_data="s100"),InlineKeyboardButton("200 в­ђ",callback_data="s200")],
-      [InlineKeyboardButton("300 в­ђ",callback_data="s300"),InlineKeyboardButton("400 в­ђ",callback_data="s400")],
-      [InlineKeyboardButton("500 в­ђ",callback_data="s500"),InlineKeyboardButton("1000 в­ђ",callback_data="s1000")],
-      [InlineKeyboardButton("вњЏпёЏ Р”СЂСѓРіРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ",callback_data="custom")]])
-    await update.message.reply_text("в­ђ Р’С‹Р±РµСЂРёС‚Рµ РєРѕР»РёС‡РµСЃС‚РІРѕ Stars:", reply_markup=kb)
+      [InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("200 ⭐",callback_data="s200")],
+      [InlineKeyboardButton("300 ⭐",callback_data="s300"),InlineKeyboardButton("400 ⭐",callback_data="s400")],
+      [InlineKeyboardButton("500 ⭐",callback_data="s500"),InlineKeyboardButton("1000 ⭐",callback_data="s1000")],
+      [InlineKeyboardButton("✏️ Другое количество",callback_data="custom")]])
+    await update.message.reply_text("⭐ Выберите количество Stars:", reply_markup=kb)
 
 async def rate(update,ctx):
     await update.message.reply_text(
-        f"рџ“€ РљСѓСЂСЃ Stars\n\n1 в­ђ = {PRICE_PER_STAR:.2f} в‚Ѕ"
+        f"📈 Курс Stars\n\n1 ⭐ = {PRICE_PER_STAR:.2f} ₽"
     )
 
 async def support(update,ctx):
-    await update.message.reply_text("рџ’¬ РџРѕРґРґРµСЂР¶РєР°\n\n@Lakizyx")
+    await update.message.reply_text("💬 Поддержка\n\n@Lakizyx")
 
 
 async def my_orders(update,ctx):
     u=(update.effective_user.username or "").lower()
     rows=cur.execute("SELECT stars,status,created_at FROM orders WHERE username=? ORDER BY created_at DESC LIMIT 10",(u,)).fetchall()
     if not rows:
-        return await update.message.reply_text("рџ“¦ РЈ РІР°СЃ РїРѕРєР° РЅРµС‚ Р·Р°РєР°Р·РѕРІ.")
-    txt="рџ“¦ РџРѕСЃР»РµРґРЅРёРµ Р·Р°РєР°Р·С‹\n\n"
+        return await update.message.reply_text("📦 У вас пока нет заказов.")
+    txt="📦 Последние заказы\n\n"
     for s,st,_ in rows:
-        dt=time.strftime('%d.%m.%Y', time.localtime(_)); txt+=f"в­ђ {s} вЂў {'вњ… РћРїР»Р°С‡РµРЅ' if st=='paid' else 'вЏі РћР¶РёРґР°РµС‚'}\nрџ“… {dt}\n\n"
+        dt=time.strftime('%d.%m.%Y', time.localtime(_)); txt+=f"⭐ {s} • {'✅ Оплачен' if st=='paid' else '⏳ Ожидает'}\n📅 {dt}\n\n"
     await update.message.reply_text(txt)
 
 async def pay_menu(update,ctx):
     stars=ctx.user_data["stars"]; price=calc(stars, update.effective_user.username)
     kb=InlineKeyboardMarkup([
-      [InlineKeyboardButton("рџ’і РЎРџР‘",callback_data="pay_spb"),InlineKeyboardButton("рџ’Ћ РљСЂРёРїС‚РѕРІР°Р»СЋС‚Р°",callback_data="pay_crypto")],
-      [InlineKeyboardButton("в—ЂпёЏ РќР°Р·Р°Рґ",callback_data="back_buy"),InlineKeyboardButton("рџЏ  РњРµРЅСЋ",callback_data="home")]])
-    await update.message.reply_text(f"рџ›’ РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ\n\nРљРѕР»РёС‡РµСЃС‚РІРѕ: {stars} в­ђ\nРЎС‚РѕРёРјРѕСЃС‚СЊ: {price} в‚Ѕ", reply_markup=kb)
+      [InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],
+      [InlineKeyboardButton("◀️ Назад",callback_data="back_buy"),InlineKeyboardButton("🏠 Меню",callback_data="home")]])
+    await update.message.reply_text(f"🛒 Подтверждение\n\nКоличество: {stars} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
 async def text(update,ctx):
     t = update.message.text
@@ -114,57 +114,57 @@ async def text(update,ctx):
             global PRICE_PER_STAR
             PRICE_PER_STAR=float(t.replace(",", "."))
             cur.execute("INSERT OR REPLACE INTO settings VALUES(?,?)",("price",str(PRICE_PER_STAR))); db.commit(); ctx.user_data["state"]=None
-            return await update.message.reply_text(f"вњ… РќРѕРІС‹Р№ РєСѓСЂСЃ: {PRICE_PER_STAR} в‚Ѕ")
+            return await update.message.reply_text(f"✅ Новый курс: {PRICE_PER_STAR} ₽")
         except:
-            return await update.message.reply_text("Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ, РЅР°РїСЂРёРјРµСЂ 1.35")
+            return await update.message.reply_text("Введите число, например 1.35")
 
-    if t == "в­ђ РљСѓРїРёС‚СЊ Stars":
+    if t == "⭐ Купить Stars":
         if not STARS_OPEN:
-            return await update.message.reply_text("вќЊ РџСЂРѕРґР°Р¶Р° Stars Р·Р°РєСЂС‹С‚Р°")
+            return await update.message.reply_text("❌ Продажа Stars закрыта")
         return await buy(update,ctx)
 
-    if t == "рџ‘¤ РџСЂРѕС„РёР»СЊ":
+    if t == "👤 Профиль":
         return await profile(update,ctx)
 
-    if t == "рџ“€ РљСѓСЂСЃ Stars":
+    if t == "📈 Курс Stars":
         return await rate(update,ctx)
 
-    if t == "рџ“¦ РњРѕРё Р·Р°РєР°Р·С‹":
+    if t == "📦 Мои заказы":
         return await my_orders(update,ctx)
 
-    if t == "рџ’¬ РџРѕРґРґРµСЂР¶РєР°":
+    if t == "💬 Поддержка":
         return await support(update,ctx)
 
-    if t == "вљ™пёЏ РђРґРјРёРЅ" and update.effective_user.username==ADMIN:
+    if t == "⚙️ Админ" and update.effective_user.username==ADMIN:
         kb=InlineKeyboardMarkup([
-            [InlineKeyboardButton(f"в­ђ Stars: {'рџџў' if STARS_OPEN else 'рџ”ґ'}",callback_data="toggle_stars")],
-            [InlineKeyboardButton(f"рџ‘‘ Premium: {'рџџў' if PREMIUM_OPEN else 'рџ”ґ'}",callback_data="toggle_premium")],
-            [InlineKeyboardButton("рџ’І РР·РјРµРЅРёС‚СЊ РєСѓСЂСЃ", callback_data="admin_rate")]
+            [InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],
+            [InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")],
+            [InlineKeyboardButton("💲 Изменить курс", callback_data="admin_rate")]
         ])
-        return await update.message.reply_text("вљ™пёЏ РђРґРјРёРЅ-РїР°РЅРµР»СЊ",reply_markup=kb)
+        return await update.message.reply_text("⚙️ Админ-панель",reply_markup=kb)
 
-    if t == "рџ‘‘ Telegram Premium":
+    if t == "👑 Telegram Premium":
         if not PREMIUM_OPEN:
-            return await update.message.reply_text("вќЊ РџСЂРѕРґР°Р¶Р° Premium Р·Р°РєСЂС‹С‚Р°")
+            return await update.message.reply_text("❌ Продажа Premium закрыта")
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("3 РјРµСЃСЏС†Р° вЂў 999 в‚Ѕ", callback_data="tg3")],
-            [InlineKeyboardButton("6 РјРµСЃСЏС†РµРІ вЂў 1299 в‚Ѕ", callback_data="tg6")],
-            [InlineKeyboardButton("12 РјРµСЃСЏС†РµРІ вЂў 2299 в‚Ѕ", callback_data="tg12")]
+            [InlineKeyboardButton("3 месяца • 999 ₽", callback_data="tg3")],
+            [InlineKeyboardButton("6 месяцев • 1299 ₽", callback_data="tg6")],
+            [InlineKeyboardButton("12 месяцев • 2299 ₽", callback_data="tg12")]
         ])
         return await update.message.reply_text(
-            "рџ‘‘ Telegram Premium\n\nР’С‹Р±РµСЂРёС‚Рµ СЃСЂРѕРє:",
+            "👑 Telegram Premium\n\nВыберите срок:",
             reply_markup=kb
         )
 
     if ctx.user_data.get("state") == "custom_amount":
         if not t.isdigit():
-            return await update.message.reply_text("Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ.")
+            return await update.message.reply_text("Введите число.")
 
         stars = int(t)
 
         if stars < 50 or stars > 5000:
             return await update.message.reply_text(
-                "вќЊ РњРѕР¶РЅРѕ РєСѓРїРёС‚СЊ РѕС‚ 50 РґРѕ 5000 в­ђ Р·Р° РѕРґРЅСѓ С‚СЂР°РЅР·Р°РєС†РёСЋ."
+                "❌ Можно купить от 50 до 5000 ⭐ за одну транзакцию."
             )
 
         ctx.user_data["stars"] = stars
@@ -174,18 +174,18 @@ async def text(update,ctx):
 
         kb = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("рџ’і РЎРџР‘", callback_data="pay_spb"),
-                InlineKeyboardButton("рџ’Ћ РљСЂРёРїС‚РѕРІР°Р»СЋС‚Р°", callback_data="pay_crypto")
+                InlineKeyboardButton("💳 СПБ", callback_data="pay_spb"),
+                InlineKeyboardButton("💎 Криптовалюта", callback_data="pay_crypto")
             ],
             [
-                InlineKeyboardButton("в—ЂпёЏ РќР°Р·Р°Рґ", callback_data="back_buy")
+                InlineKeyboardButton("◀️ Назад", callback_data="back_buy")
             ]
         ])
 
         return await update.message.reply_text(
-            f"рџ›’ РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ\n\n"
-            f"РљРѕР»РёС‡РµСЃС‚РІРѕ: {stars} в­ђ\n"
-            f"РЎС‚РѕРёРјРѕСЃС‚СЊ: {price} в‚Ѕ",
+            f"🛒 Подтверждение\n\n"
+            f"Количество: {stars} ⭐\n"
+            f"Стоимость: {price} ₽",
             reply_markup=kb
         )
 async def admin_give(update, ctx):
@@ -194,7 +194,7 @@ async def admin_give(update, ctx):
 
     if len(ctx.args) != 2:
         return await update.message.reply_text(
-            "вќЊ Р¤РѕСЂРјР°С‚:\n/give username СЃСѓРјРјР°"
+            "❌ Формат:\n/give username сумма"
         )
 
     username = ctx.args[0].lstrip("@").lower()
@@ -203,7 +203,7 @@ async def admin_give(update, ctx):
         amount = float(ctx.args[1])
     except ValueError:
         return await update.message.reply_text(
-            "вќЊ РЎСѓРјРјР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ С‡РёСЃР»РѕРј."
+            "❌ Сумма должна быть числом."
         )
 
     cur.execute(
@@ -226,10 +226,10 @@ async def admin_give(update, ctx):
     balance = cur.fetchone()[0]
 
     await update.message.reply_text(
-        f"вћ• Р‘Р°Р»Р°РЅСЃ РїРѕРїРѕР»РЅРµРЅ\n\n"
-        f"РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ: @{username}\n"
-        f"РќР°С‡РёСЃР»РµРЅРѕ: {amount:g}\n"
-        f"Р‘Р°Р»Р°РЅСЃ: {balance:g}"
+        f"➕ Баланс пополнен\n\n"
+        f"Пользователь: @{username}\n"
+        f"Начислено: {amount:g}\n"
+        f"Баланс: {balance:g}"
     )
 async def admin_take(update, ctx):
     if update.effective_user.username != ADMIN:
@@ -237,7 +237,7 @@ async def admin_take(update, ctx):
 
     if len(ctx.args) != 2:
         return await update.message.reply_text(
-            "вќЊ Р¤РѕСЂРјР°С‚:\n/take username СЃСѓРјРјР°"
+            "❌ Формат:\n/take username сумма"
         )
 
     username = ctx.args[0].lstrip("@").lower()
@@ -246,12 +246,12 @@ async def admin_take(update, ctx):
         amount = float(ctx.args[1])
     except ValueError:
         return await update.message.reply_text(
-            "вќЊ РЎСѓРјРјР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ С‡РёСЃР»РѕРј."
+            "❌ Сумма должна быть числом."
         )
 
     if amount <= 0:
         return await update.message.reply_text(
-            "вќЊ РЎСѓРјРјР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ Р±РѕР»СЊС€Рµ 0."
+            "❌ Сумма должна быть больше 0."
         )
 
     cur.execute(
@@ -263,17 +263,17 @@ async def admin_take(update, ctx):
 
     if not row:
         return await update.message.reply_text(
-            f"вќЊ РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ @{username} РЅРµ РЅР°Р№РґРµРЅ."
+            f"❌ Пользователь @{username} не найден."
         )
 
     balance = row[0]
 
     if amount > balance:
         return await update.message.reply_text(
-            f"вќЊ РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ СЃСЂРµРґСЃС‚РІ.\n\n"
-            f"РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ: @{username}\n"
-            f"Р‘Р°Р»Р°РЅСЃ: {balance:g}\n"
-            f"Р—Р°РїСЂРѕС€РµРЅРѕ: {amount:g}"
+            f"❌ Недостаточно средств.\n\n"
+            f"Пользователь: @{username}\n"
+            f"Баланс: {balance:g}\n"
+            f"Запрошено: {amount:g}"
         )
 
     cur.execute(
@@ -291,10 +291,10 @@ async def admin_take(update, ctx):
     new_balance = cur.fetchone()[0]
 
     await update.message.reply_text(
-        f"вћ– Р‘Р°Р»Р°РЅСЃ СѓРјРµРЅСЊС€РµРЅ\n\n"
-        f"РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ: @{username}\n"
-        f"РЎРЅСЏС‚Рѕ: {amount:g}\n"
-        f"Р‘Р°Р»Р°РЅСЃ: {new_balance:g}"
+        f"➖ Баланс уменьшен\n\n"
+        f"Пользователь: @{username}\n"
+        f"Снято: {amount:g}\n"
+        f"Баланс: {new_balance:g}"
     )
 async def admin_premium(update, ctx):
     if update.effective_user.username != ADMIN:
@@ -302,7 +302,7 @@ async def admin_premium(update, ctx):
 
     if len(ctx.args) != 1:
         return await update.message.reply_text(
-            "вќЊ Р¤РѕСЂРјР°С‚:\n/premium username"
+            "❌ Формат:\n/premium username"
         )
 
     username = ctx.args[0].lstrip("@").lower()
@@ -310,9 +310,9 @@ async def admin_premium(update, ctx):
     give_premium(username)
 
     await update.message.reply_text(
-        f"рџ‘‘ Premium РІС‹РґР°РЅ\n\n"
-        f"РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ: @{username}\n"
-        f"РЎРєРёРґРєР°: 20%"
+        f"👑 Premium выдан\n\n"
+        f"Пользователь: @{username}\n"
+        f"Скидка: 20%"
     )
 
 def create_order(username, stars, rub_amount, usdt_amount, wallet):
@@ -366,56 +366,56 @@ async def cb(update,ctx):
     d=q.data
     if d=="toggle_stars":
         STARS_OPEN=not STARS_OPEN
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"в­ђ Stars: {'рџџў' if STARS_OPEN else 'рџ”ґ'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"рџ‘‘ Premium: {'рџџў' if PREMIUM_OPEN else 'рџ”ґ'}",callback_data="toggle_premium")]])
-        return await q.edit_message_text("вљ™пёЏ РђРґРјРёРЅ-РїР°РЅРµР»СЊ",reply_markup=kb)
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")]])
+        return await q.edit_message_text("⚙️ Админ-панель",reply_markup=kb)
 
     if d=="toggle_premium":
         PREMIUM_OPEN=not PREMIUM_OPEN
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"в­ђ Stars: {'рџџў' if STARS_OPEN else 'рџ”ґ'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"рџ‘‘ Premium: {'рџџў' if PREMIUM_OPEN else 'рџ”ґ'}",callback_data="toggle_premium")]])
-        return await q.edit_message_text("вљ™пёЏ РђРґРјРёРЅ-РїР°РЅРµР»СЊ",reply_markup=kb)
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")]])
+        return await q.edit_message_text("⚙️ Админ-панель",reply_markup=kb)
 
     if d == "admin_users":
         cur.execute("SELECT COUNT(*) FROM premium")
         count = cur.fetchone()[0]
-        return await q.message.reply_text(f"рџ‘¤ РџРѕР»СЊР·РѕРІР°С‚РµР»Рё\n\nР’СЃРµРіРѕ: {count}")
+        return await q.message.reply_text(f"👤 Пользователи\n\nВсего: {count}")
     if d == "admin_balances":
-        return await q.message.reply_text("рџ’° Р Р°Р·РґРµР» Р±Р°Р»Р°РЅСЃРѕРІ РѕС‚РєСЂС‹С‚")
+        return await q.message.reply_text("💰 Раздел балансов открыт")
     if d == "admin_stars":
-        return await q.message.reply_text("в­ђ Р Р°Р·РґРµР» Stars РѕС‚РєСЂС‹С‚")
+        return await q.message.reply_text("⭐ Раздел Stars открыт")
     if d=="admin_rate":
         ctx.user_data["state"]="change_rate"
-        return await q.message.reply_text(f"рџ’І РўРµРєСѓС‰РёР№ РєСѓСЂСЃ: {PRICE_PER_STAR}\n\nР’РІРµРґРёС‚Рµ РЅРѕРІС‹Р№ РєСѓСЂСЃ (РЅР°РїСЂРёРјРµСЂ 1.38)")
+        return await q.message.reply_text(f"💲 Текущий курс: {PRICE_PER_STAR}\n\nВведите новый курс (например 1.38)")
         
     if d=="home":
-        return await q.edit_message_text("рџЏ  Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ\n\nРСЃРїРѕР»СЊР·СѓР№С‚Рµ РєРЅРѕРїРєРё СЃРЅРёР·Сѓ РґР»СЏ РІС‹Р±РѕСЂР° СЂР°Р·РґРµР»Р°.")
+        return await q.edit_message_text("🏠 Главное меню\n\nИспользуйте кнопки снизу для выбора раздела.")
 
-    if d=="back_profile": return await q.edit_message_text("рџ‘¤ Р—Р°РєСЂРѕР№С‚Рµ СЃРѕРѕР±С‰РµРЅРёРµ Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ РјРµРЅСЋ СЃРЅРёР·Сѓ.")
+    if d=="back_profile": return await q.edit_message_text("👤 Закройте сообщение и используйте меню снизу.")
     if d=="back_buy":
         kb=InlineKeyboardMarkup([
-            [InlineKeyboardButton("100 в­ђ",callback_data="s100"),InlineKeyboardButton("200 в­ђ",callback_data="s200")],
-            [InlineKeyboardButton("300 в­ђ",callback_data="s300"),InlineKeyboardButton("400 в­ђ",callback_data="s400")],
-            [InlineKeyboardButton("500 в­ђ",callback_data="s500"),InlineKeyboardButton("1000 в­ђ",callback_data="s1000")],
-            [InlineKeyboardButton("вњЏпёЏ Р”СЂСѓРіРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ",callback_data="custom")]
+            [InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("200 ⭐",callback_data="s200")],
+            [InlineKeyboardButton("300 ⭐",callback_data="s300"),InlineKeyboardButton("400 ⭐",callback_data="s400")],
+            [InlineKeyboardButton("500 ⭐",callback_data="s500"),InlineKeyboardButton("1000 ⭐",callback_data="s1000")],
+            [InlineKeyboardButton("✏️ Другое количество",callback_data="custom")]
         ])
-        return await q.edit_message_text("в­ђ Р’С‹Р±РµСЂРёС‚Рµ РєРѕР»РёС‡РµСЃС‚РІРѕ Stars:", reply_markup=kb)
+        return await q.edit_message_text("⭐ Выберите количество Stars:", reply_markup=kb)
     if d=="custom":
         ctx.user_data["state"]="custom_amount"
-        return await q.edit_message_text("вњЏпёЏ Р’РІРµРґРёС‚Рµ РєРѕР»РёС‡РµСЃС‚РІРѕ Stars:")
+        return await q.edit_message_text("✏️ Введите количество Stars:")
     if d.startswith("s"):
         ctx.user_data["stars"]=int(d[1:])
         price=calc(ctx.user_data["stars"], q.from_user.username)
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("рџ’і РЎРџР‘",callback_data="pay_spb"),InlineKeyboardButton("рџ’Ћ РљСЂРёРїС‚РѕРІР°Р»СЋС‚Р°",callback_data="pay_crypto")],[InlineKeyboardButton("в—ЂпёЏ РќР°Р·Р°Рґ",callback_data="back_buy"),InlineKeyboardButton("рџЏ  РњРµРЅСЋ",callback_data="home")]])
-        return await q.edit_message_text(f"рџ›’ РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ\n\nРљРѕР»РёС‡РµСЃС‚РІРѕ: {ctx.user_data['stars']} в­ђ\nРЎС‚РѕРёРјРѕСЃС‚СЊ: {price} в‚Ѕ", reply_markup=kb)
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy"),InlineKeyboardButton("🏠 Меню",callback_data="home")]])
+        return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
 
     if d=="pay_crypto":
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("рџЄ™ GRAM (TON)", callback_data="pay_grm")],
-            [InlineKeyboardButton("рџ’µ USDT (TON)", callback_data="pay_usdt")],
-            [InlineKeyboardButton("в—ЂпёЏ РќР°Р·Р°Рґ", callback_data="back_buy"),InlineKeyboardButton("рџЏ  РњРµРЅСЋ",callback_data="home")]
+            [InlineKeyboardButton("🪙 GRAM (TON)", callback_data="pay_grm")],
+            [InlineKeyboardButton("💵 USDT (TON)", callback_data="pay_usdt")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_buy"),InlineKeyboardButton("🏠 Меню",callback_data="home")]
         ])
         return await q.edit_message_text(
-            "рџ’Ћ РљСЂРёРїС‚РѕРІР°Р»СЋС‚Р°\n\nР’С‹Р±РµСЂРёС‚Рµ РІР°Р»СЋС‚Сѓ:",
+            "💎 Криптовалюта\n\nВыберите валюту:",
             reply_markup=kb
         )
 
@@ -423,7 +423,7 @@ async def cb(update,ctx):
         stars = ctx.user_data.get("stars")
 
         if not stars:
-            return await q.edit_message_text("вќЊ РќРµ РІС‹Р±СЂР°РЅРѕ РєРѕР»РёС‡РµСЃС‚РІРѕ Stars.")
+            return await q.edit_message_text("❌ Не выбрано количество Stars.")
 
         rub_amount = calc(stars, q.from_user.username)
         usdt_amount = round(rub_amount / USDT_RATE, 2)
@@ -440,56 +440,56 @@ async def cb(update,ctx):
         coin = "GRAM (TON)" if d=="pay_grm" else "USDT (TON)"
 
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("рџ”„ РџСЂРѕРІРµСЂРёС‚СЊ РѕРїР»Р°С‚Сѓ", callback_data=f"check_{order_id}")]
+            [InlineKeyboardButton("🔄 Проверить оплату", callback_data=f"check_{order_id}")]
         ])
 
-        await q.edit_message_text("вЏі РЎРѕР·РґР°СЋ СЃС‡С‘С‚...")
+        await q.edit_message_text("⏳ Создаю счёт...")
         return await q.edit_message_text(
-            f"в­ђ РџРѕРєСѓРїРєР° Stars\n\n"
-            f"рџЋЃ РўРѕРІР°СЂ: {stars} в­ђ\n"
-            f"рџ’Ћ Р’Р°Р»СЋС‚Р°: {coin}\n\n"
-            f"РЎСѓРјРјР°: {usdt_amount}\n\n"
-            f"РљРѕС€РµР»С‘Рє:\n`{wallet}`\n\n"
+            f"⭐ Покупка Stars\n\n"
+            f"🎁 Товар: {stars} ⭐\n"
+            f"💎 Валюта: {coin}\n\n"
+            f"Сумма: {usdt_amount}\n\n"
+            f"Кошелёк:\n`{wallet}`\n\n"
             f"MEMO:\n`{memo}`",
             reply_markup=kb,
             parse_mode="Markdown"
         )
 
     if d in ["tg3","tg6","tg12"]:
-        ctx.user_data["tg_months"] = {"tg3":"3 РјРµСЃСЏС†Р°","tg6":"6 РјРµСЃСЏС†РµРІ","tg12":"12 РјРµСЃСЏС†РµРІ"}[d]
+        ctx.user_data["tg_months"] = {"tg3":"3 месяца","tg6":"6 месяцев","tg12":"12 месяцев"}[d]
         ctx.user_data["tg_price"] = {"tg3":999,"tg6":1299,"tg12":2299}[d]
 
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("рџ’і РЎРџР‘", callback_data="tg_spb"),
-             InlineKeyboardButton("рџ’Ћ РљСЂРёРїС‚РѕРІР°Р»СЋС‚Р°", callback_data="tg_crypto")],
-            [InlineKeyboardButton("в—ЂпёЏ РќР°Р·Р°Рґ", callback_data="back_profile"),InlineKeyboardButton("рџЏ  РњРµРЅСЋ",callback_data="home")]
+            [InlineKeyboardButton("💳 СПБ", callback_data="tg_spb"),
+             InlineKeyboardButton("💎 Криптовалюта", callback_data="tg_crypto")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile"),InlineKeyboardButton("🏠 Меню",callback_data="home")]
         ])
 
         return await q.edit_message_text(
-            f"рџ‘‘ Telegram Premium\n\n{ctx.user_data['tg_months']}\nР¦РµРЅР°: {ctx.user_data['tg_price']} в‚Ѕ",
+            f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\nЦена: {ctx.user_data['tg_price']} ₽",
             reply_markup=kb
         )
 
     if d=="tg_spb":
         return await q.edit_message_text(
-            f"рџ’і Telegram Premium\n\n{ctx.user_data['tg_months']}\nРљ РѕРїР»Р°С‚Рµ: {ctx.user_data['tg_price']} в‚Ѕ"
+            f"💳 Telegram Premium\n\n{ctx.user_data['tg_months']}\nК оплате: {ctx.user_data['tg_price']} ₽"
         )
 
     if d=="tg_crypto":
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("рџЄ™ GRAM (TON)", callback_data="tg_grm"),
-             InlineKeyboardButton("рџ’µ USDT (TON)", callback_data="tg_usdt")]
+            [InlineKeyboardButton("🪙 GRAM (TON)", callback_data="tg_grm"),
+             InlineKeyboardButton("💵 USDT (TON)", callback_data="tg_usdt")]
         ])
-        return await q.edit_message_text("рџ’Ћ РљСЂРёРїС‚РѕРІР°Р»СЋС‚Р°\n\nР’С‹Р±РµСЂРёС‚Рµ РІР°Р»СЋС‚Сѓ:", reply_markup=kb)
+        return await q.edit_message_text("💎 Криптовалюта\n\nВыберите валюту:", reply_markup=kb)
 
     if d=="tg_grm" or d=="tg_usdt":
         coin="GRAM (TON)" if d=="tg_grm" else "USDT (TON)"
         wallet = GRAM_WALLET if d=="tg_grm" else USDT_WALLET
         memo=str(uuid.uuid4())
         usdt=round(ctx.user_data["tg_price"]/USDT_RATE,2)
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("рџ”„ РџСЂРѕРІРµСЂРёС‚СЊ РѕРїР»Р°С‚Сѓ",callback_data="check_premium")],[InlineKeyboardButton("рџЏ  РњРµРЅСЋ",callback_data="home")]])
-        await q.edit_message_text("вЏі РЎРѕР·РґР°СЋ СЃС‡С‘С‚...")
-        return await q.edit_message_text(f"рџ‘‘ Telegram Premium\n\n{ctx.user_data['tg_months']}\nрџ’Ћ {coin}\n\nРЎСѓРјРјР°: {usdt}\n\nРљРѕС€РµР»С‘Рє:\n`{wallet}`\n\nMEMO:\n`{memo}`",reply_markup=kb,parse_mode="Markdown")
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату",callback_data="check_premium")],[InlineKeyboardButton("🏠 Меню",callback_data="home")]])
+        await q.edit_message_text("⏳ Создаю счёт...")
+        return await q.edit_message_text(f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n💎 {coin}\n\nСумма: {usdt}\n\nКошелёк:\n`{wallet}`\n\nMEMO:\n`{memo}`",reply_markup=kb,parse_mode="Markdown")
 
     if d.startswith("check_"):
         await q.answer()
@@ -502,12 +502,12 @@ async def cb(update,ctx):
     ).fetchone()
 
     if not row:
-        return await q.answer("Р—Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ", show_alert=True)
+        return await q.answer("Заказ не найден", show_alert=True)
 
     memo, usdt, stars, status = row
 
     if status == "paid":
-        return await q.answer("РЈР¶Рµ РѕРїР»Р°С‡РµРЅРѕ вњ…", show_alert=True)
+        return await q.answer("Уже оплачено ✅", show_alert=True)
 
     if check_payment(memo, usdt):
         cur.execute(
@@ -517,31 +517,31 @@ async def cb(update,ctx):
         db.commit()
 
         return await q.edit_message_text(
-            f"вњ… РћРїР»Р°С‚Р° РїРѕРґС‚РІРµСЂР¶РґРµРЅР°!\n\nР’С‹РґР°РЅРѕ: {stars} в­ђ"
+            f"✅ Оплата подтверждена!\n\nВыдано: {stars} ⭐"
         )
 
-    return await q.answer("РћРїР»Р°С‚Р° РµС‰С‘ РЅРµ РЅР°Р№РґРµРЅР°", show_alert=True)
+    return await q.answer("Оплата ещё не найдена", show_alert=True)
 
     if d=="premium":
         kb = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("рџ’і РЎРџР‘", callback_data="prem_spb"),
-                InlineKeyboardButton("рџ’Ћ РљСЂРёРїС‚РѕРІР°Р»СЋС‚Р°", callback_data="prem_crypto")
+                InlineKeyboardButton("💳 СПБ", callback_data="prem_spb"),
+                InlineKeyboardButton("💎 Криптовалюта", callback_data="prem_crypto")
             ],
-            [InlineKeyboardButton("в—ЂпёЏ РќР°Р·Р°Рґ", callback_data="back_profile"),InlineKeyboardButton("рџЏ  РњРµРЅСЋ",callback_data="home")]
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile"),InlineKeyboardButton("🏠 Меню",callback_data="home")]
         ])
         return await q.edit_message_text(
-            "рџ‘‘ Premium StarsGo\n\nРџРѕРґРїРёСЃРєР°: 1 РјРµСЃСЏС†\nРЎРєРёРґРєР°: 20%\n\nР’С‹Р±РµСЂРёС‚Рµ СЃРїРѕСЃРѕР± РѕРїР»Р°С‚С‹:",
+            "👑 Premium StarsGo\n\nПодписка: 1 месяц\nСкидка: 20%\n\nВыберите способ оплаты:",
             reply_markup=kb
         )
-    if d=="prem_spb": return await q.edit_message_text("вљ пёЏ РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹ РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ")
+    if d=="prem_spb": return await q.edit_message_text("⚠️ Способ оплаты временно недоступен")
     if d=="prem_crypto":
         kb=InlineKeyboardMarkup([
-            [InlineKeyboardButton("рџЄ™ GRAM (TON)",callback_data="prem_grm")],
-            [InlineKeyboardButton("рџ’µ USDT (TON)",callback_data="prem_usdt")],
-            [InlineKeyboardButton("в—ЂпёЏ РќР°Р·Р°Рґ",callback_data="premium")]
+            [InlineKeyboardButton("🪙 GRAM (TON)",callback_data="prem_grm")],
+            [InlineKeyboardButton("💵 USDT (TON)",callback_data="prem_usdt")],
+            [InlineKeyboardButton("◀️ Назад",callback_data="premium")]
         ])
-        return await q.edit_message_text("рџ’Ћ РљСЂРёРїС‚РѕРІР°Р»СЋС‚Р°\n\nР’С‹Р±РµСЂРёС‚Рµ РІР°Р»СЋС‚Сѓ:",reply_markup=kb)
+        return await q.edit_message_text("💎 Криптовалюта\n\nВыберите валюту:",reply_markup=kb)
 
 
 
@@ -550,45 +550,45 @@ async def cb(update,ctx):
         wallet=GRAM_WALLET if d=="prem_grm" else USDT_WALLET
         memo=str(uuid.uuid4())
         usdt=round(999/USDT_RATE,2)
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("рџ”„ РџСЂРѕРІРµСЂРёС‚СЊ РѕРїР»Р°С‚Сѓ",callback_data="check_premium")]])
-        await q.edit_message_text("вЏі РЎРѕР·РґР°СЋ СЃС‡С‘С‚...")
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату",callback_data="check_premium")]])
+        await q.edit_message_text("⏳ Создаю счёт...")
         await __import__("asyncio").sleep(1)
         return await q.edit_message_text(
-            f"рџ‘‘ Premium StarsGo\n\nрџ’Ћ {coin}\nРЎСѓРјРјР°: {usdt}\n\nРљРѕС€РµР»С‘Рє:\n`{wallet}`\n\nMEMO:\n`{memo}`",
+            f"👑 Premium StarsGo\n\n💎 {coin}\nСумма: {usdt}\n\nКошелёк:\n`{wallet}`\n\nMEMO:\n`{memo}`",
             reply_markup=kb,parse_mode="Markdown")
 
     if d=="pay_spb":
-        return await q.edit_message_text("вљ пёЏ РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹ РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ")
+        return await q.edit_message_text("⚠️ Способ оплаты временно недоступен")
 async def cmd_premium(update,ctx):
     if update.effective_user.username!=ADMIN: return
     p=update.message.text.split()
-    if len(p)!=2: return await update.message.reply_text("РСЃРїРѕР»СЊР·СѓР№: /premium @user")
-    give_premium(p[1].replace("@","")); await update.message.reply_text("рџ‘‘ Premium РІС‹РґР°РЅ")
+    if len(p)!=2: return await update.message.reply_text("Используй: /premium @user")
+    give_premium(p[1].replace("@","")); await update.message.reply_text("👑 Premium выдан")
 async def cmd_unpremium(update,ctx):
     if update.effective_user.username!=ADMIN: return
     p=update.message.text.split()
-    if len(p)!=2: return await update.message.reply_text("РСЃРїРѕР»СЊР·СѓР№: /unpremium @user")
-    remove_premium(p[1].replace("@","")); await update.message.reply_text("вќЊ Premium СЃРЅСЏС‚")
+    if len(p)!=2: return await update.message.reply_text("Используй: /unpremium @user")
+    remove_premium(p[1].replace("@","")); await update.message.reply_text("❌ Premium снят")
 async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.username != ADMIN:
         return
 
     keyboard = [
-        [InlineKeyboardButton("рџ‘¤ РџРѕР»СЊР·РѕРІР°С‚РµР»Рё", callback_data="admin_users")],
-        [InlineKeyboardButton("рџ’° Р‘Р°Р»Р°РЅСЃС‹", callback_data="admin_balances")],
-        [InlineKeyboardButton("в­ђ Stars", callback_data="admin_stars")],
-        [InlineKeyboardButton("рџ’І РР·РјРµРЅРёС‚СЊ РєСѓСЂСЃ", callback_data="admin_rate")],
-        [InlineKeyboardButton("вћ• Р’С‹РґР°С‚СЊ Р±Р°Р»Р°РЅСЃ", callback_data="admin_give")],
-        [InlineKeyboardButton("вћ– РЎРЅСЏС‚СЊ Р±Р°Р»Р°РЅСЃ", callback_data="admin_take")],
-        [InlineKeyboardButton("рџљ« Р‘Р»РѕРєРёСЂРѕРІРєР°", callback_data="admin_block")],
-        [InlineKeyboardButton("рџЋЃ РџСЂРѕРјРѕРєРѕРґС‹", callback_data="admin_promo")],
-        [InlineKeyboardButton("рџ“Љ РЎС‚Р°С‚РёСЃС‚РёРєР°", callback_data="admin_stats")],
-        [InlineKeyboardButton("рџ“ў Р Р°СЃСЃС‹Р»РєР°", callback_data="admin_broadcast")],
-        [InlineKeyboardButton("рџ“ќ Р›РѕРіРё", callback_data="admin_logs")],
+        [InlineKeyboardButton("👤 Пользователи", callback_data="admin_users")],
+        [InlineKeyboardButton("💰 Балансы", callback_data="admin_balances")],
+        [InlineKeyboardButton("⭐ Stars", callback_data="admin_stars")],
+        [InlineKeyboardButton("💲 Изменить курс", callback_data="admin_rate")],
+        [InlineKeyboardButton("➕ Выдать баланс", callback_data="admin_give")],
+        [InlineKeyboardButton("➖ Снять баланс", callback_data="admin_take")],
+        [InlineKeyboardButton("🚫 Блокировка", callback_data="admin_block")],
+        [InlineKeyboardButton("🎁 Промокоды", callback_data="admin_promo")],
+        [InlineKeyboardButton("📊 Статистика", callback_data="admin_stats")],
+        [InlineKeyboardButton("📢 Рассылка", callback_data="admin_broadcast")],
+        [InlineKeyboardButton("📝 Логи", callback_data="admin_logs")],
     ]
 
     await update.message.reply_text(
-        "вљ™пёЏ РђРґРјРёРЅ-РїР°РЅРµР»СЊ StarsGo",
+        "⚙️ Админ-панель StarsGo",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
