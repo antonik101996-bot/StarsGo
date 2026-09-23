@@ -387,12 +387,13 @@ return await q.edit_message_text(
     parse_mode="Markdown"
 )
 
-    if d.startswith("check_"):
+       if d.startswith("check_"):
         order_id = d.split("_", 1)[1]
 
         row = cur.execute(
             "SELECT memo, usdt_amount, stars, status FROM orders WHERE order_id=?",
             (order_id,)
+        ).fetchone()
         ).fetchone()
 
         if row is None:
