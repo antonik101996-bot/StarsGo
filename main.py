@@ -19,44 +19,13 @@ cur = db.cursor()
 cur.execute("CREATE TABLE IF NOT EXISTS premium(username TEXT PRIMARY KEY)")
 db.commit()
 
-cur.execute("""
-CREATE TABLE IF NOT EXISTS orders (
-    order_id TEXT PRIMARY KEY,
-    username TEXT NOT NULL,
-    stars INTEGER NOT NULL,
-    rub_amount REAL NOT NULL,
-    usdt_amount REAL NOT NULL,
-    memo TEXT UNIQUE NOT NULL,
-    wallet TEXT NOT NULL,
-    status TEXT DEFAULT 'pending',
-    created_at INTEGER,
-    paid_at INTEGER
-)
-""")
+cur.execute(""" CREATE TABLE IF NOT EXISTS orders ( order_id TEXT PRIMARY KEY, username TEXT NOT NULL, stars INTEGER NOT NULL, rub_amount REAL NOT NULL, usdt_amount REAL NOT NULL, memo TEXT UNIQUE NOT NULL, wallet TEXT NOT NULL, status TEXT DEFAULT 'pending', created_at INTEGER, paid_at INTEGER ) """)
 db.commit()
 
-cur.execute("""
-CREATE TABLE IF NOT EXISTS orders (
-    order_id TEXT PRIMARY KEY,
-    username TEXT NOT NULL,
-    stars INTEGER NOT NULL,
-    rub_amount REAL NOT NULL,
-    usdt_amount REAL NOT NULL,
-    memo TEXT NOT NULL UNIQUE,
-    wallet TEXT NOT NULL,
-    status TEXT DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    paid_at TIMESTAMP
-)
-""")
+cur.execute(""" CREATE TABLE IF NOT EXISTS orders ( order_id TEXT PRIMARY KEY, username TEXT NOT NULL, stars INTEGER NOT NULL, rub_amount REAL NOT NULL, usdt_amount REAL NOT NULL, memo TEXT NOT NULL UNIQUE, wallet TEXT NOT NULL, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, paid_at TIMESTAMP ) """)
 db.commit()
 
-cur.execute("""
-CREATE TABLE IF NOT EXISTS balances (
-    username TEXT PRIMARY KEY,
-    balance REAL DEFAULT 0
-)
-""")
+cur.execute(""" CREATE TABLE IF NOT EXISTS balances ( username TEXT PRIMARY KEY, balance REAL DEFAULT 0 ) """)
 db.commit()
 def is_premium(username):
     if not username: return False
@@ -284,19 +253,7 @@ def create_order(username, stars, rub_amount, usdt_amount, wallet):
     order_id = str(uuid.uuid4())
     memo = str(uuid.uuid4())
 
-    cur.execute("""
-    INSERT INTO orders (
-        order_id,
-        username,
-        stars,
-        rub_amount,
-        usdt_amount,
-        memo,
-        wallet,
-        created_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
+    cur.execute(""" INSERT INTO orders ( order_id, username, stars, rub_amount, usdt_amount, memo, wallet, created_at ) VALUES (?, ?, ?, ?, ?, ?, ?, ?) """, (
         order_id,
         username.lower(),
         stars,
@@ -333,15 +290,6 @@ def check_payment(memo, usdt_amount):
         amount = int(tx.get("amount", 0)) / 1000000
 
         if comment == memo and abs(amount - usdt_amount) < 0.01:
-            return True
-
-    return False
-
-    for tx in data.get("transactions", []):
-        comment = tx.get("comment", "")
-        amount = float(tx.get("amount", 0)) / 1000000
-
-        if comment == memo and abs(amount - usdt_amount) <= 0.01:
             return True
 
     return False
@@ -450,8 +398,6 @@ async def cb(update,ctx):
     if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
     if d=="pay_spb":
         return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
-    if d=="pay_crypto":
-        return await q.edit_message_text(f"💎 TON / USDT\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
 async def cmd_premium(update,ctx):
     if update.effective_user.username!=ADMIN: return
     p=update.message.text.split()
