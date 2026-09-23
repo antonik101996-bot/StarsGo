@@ -322,16 +322,15 @@ def check_payment(memo, usdt_amount):
     return False
 
 async def cb(update,ctx):
+    global STARS_OPEN, PREMIUM_OPEN
     q=update.callback_query
     d=q.data
     if d=="toggle_stars":
-        global STARS_OPEN
         STARS_OPEN=not STARS_OPEN
         kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")]])
         return await q.edit_message_text("⚙️ Админ-панель",reply_markup=kb)
 
     if d=="toggle_premium":
-        global PREMIUM_OPEN
         PREMIUM_OPEN=not PREMIUM_OPEN
         kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")]])
         return await q.edit_message_text("⚙️ Админ-панель",reply_markup=kb)
