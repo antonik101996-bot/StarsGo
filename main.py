@@ -374,19 +374,19 @@ async def cb(update,ctx):
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("🔄 Проверить оплату", callback_data=f"check_{order_id}")]
         ])
+return await q.edit_message_text(
+    "🤖 Счёт USDT (TON)\n\n"
+    f"🎁 Товар: {stars} ⭐\n"
+    f"👛 Сумма: {rub_amount} ₽\n\n"
+    f"💷 Переведите: {usdt_amount} USDT\n\n"
+    "👛 Кошелёк:\n"
+    f"`{TON_WALLET}`\n\n"
+    "💬 MEMO:\n"
+    f"`{memo}`",
+    reply_markup=kb,
+    parse_mode="Markdown"
+)
 
-        return await q.edit_message_text(
-            f"🤖 Счёт USDT (TON)\n\n"
-            f"➕ Получатель: @{ADMIN}\n"
-            f"🎁 Товар: {stars} ⭐\n"
-            f"👛 Сумма: {rub_amount} ₽\n\n"
-            f"❗️ После успешной оплаты бот автоматически обработает ваш заказ\n\n"
-            f"💷 Переведите ТОЧНУЮ СУММУ: {usdt_amount} USDT (TON)\n\n"
-            f"👛 На кошелёк:\n{TON_WALLET}\n\n"
-            f"⚠️ В кошельке выберите токен USDT (jetton на TON)\n\n"
-            f"💬 ОБЯЗАТЕЛЬНО укажите MEMO:\n{memo}",
-            reply_markup=kb
-        )
     if d.startswith("check_"):
         order_id = d.split("_", 1)[1]
 
