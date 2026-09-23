@@ -353,6 +353,7 @@ async def cb(update,ctx):
         price=calc(ctx.user_data["stars"], q.from_user.username)
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
         return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
+
     if d=="pay_crypto":
         stars = ctx.user_data.get("stars")
 
@@ -379,47 +380,14 @@ async def cb(update,ctx):
             f"➕ Получатель: @{ADMIN}\n"
             f"🎁 Товар: {stars} ⭐\n"
             f"👛 Сумма: {rub_amount} ₽\n\n"
+            f"❗️ После успешной оплаты бот автоматически обработает ваш заказ\n\n"
             f"💷 Переведите ТОЧНУЮ СУММУ: {usdt_amount} USDT (TON)\n\n"
             f"👛 На кошелёк:\n{TON_WALLET}\n\n"
-            f"💬 MEMO:\n{memo}",
+            f"⚠️ В кошельке выберите токен USDT (jetton на TON)\n\n"
+            f"💬 ОБЯЗАТЕЛЬНО укажите MEMO:\n{memo}",
             reply_markup=kb
         )
-        
-    if d.startswith("check_"):
-        order_id = d.split("_", 1)[1]
-
-        row = cur.execute(
-            "SELECT memo, usdt_amount, stars, status FROM orders WHERE order_id=?",
-            (order_id,)
-        ).fetchone()
-
-        if row is None:
-            return await q.answer("Заказ не найден", show_alert=True)
-
-        memo, usdt, stars, status = row
-
-        if status == "paid":
-            return await q.answer("Уже оплачено ✅", show_alert=True)
-
-        ok = check_payment(memo, usdt)
-
-        if ok:
-            cur.execute(
-                "UPDATE orders SET status='paid', paid_at=? WHERE order_id=?",
-                (int(time.time()), order_id)
-            )
-            db.commit()
-
-            return await q.edit_message_text(
-                f"✅ Оплата подтверждена!\n\n"
-                f"Выдано: {stars} ⭐"
-            )
-
-        return await q.answer(
-            "Оплата ещё не найдена",
-            show_alert=True
-        )
-
+    
     if d=="premium":
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="prem_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="prem_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
         return await q.edit_message_text("💎 Premium StarsGo\n\n999 ₽\nСкидка 20% на все покупки.", reply_markup=kb)
