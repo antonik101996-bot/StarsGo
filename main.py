@@ -295,7 +295,8 @@ def check_payment(memo, usdt_amount):
     return False
 
 async def cb(update,ctx):
-    q=update.callback_query; await q.answer(); d=q.data
+    q=update.callback_query
+    d=q.data
     if d == "admin_users":
         cur.execute("SELECT COUNT(*) FROM premium")
         count = cur.fetchone()[0]
