@@ -354,6 +354,7 @@ async def cb(update,ctx):
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
         return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
+
     if d=="pay_crypto":
         stars = ctx.user_data.get("stars")
 
@@ -374,19 +375,22 @@ async def cb(update,ctx):
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("🔄 Проверить оплату", callback_data=f"check_{order_id}")]
         ])
-return await q.edit_message_text(
-    "🤖 Счёт USDT (TON)\n\n"
-    f"🎁 Товар: {stars} ⭐\n"
-    f"👛 Сумма: {rub_amount} ₽\n\n"
-    f"💷 Переведите: {usdt_amount} USDT\n\n"
-    "👛 Кошелёк:\n"
-    f"`{TON_WALLET}`\n\n"
-    "💬 MEMO:\n"
-    f"`{memo}`",
-    reply_markup=kb,
-    parse_mode="Markdown"
-)
-       if d.startswith("check_"):
+
+        return await q.edit_message_text(
+            "🤖 Счёт USDT (TON)\n\n"
+            f"➕ Получатель: @{ADMIN}\n"
+            f"🎁 Товар: {stars} ⭐\n"
+            f"👛 Сумма: {rub_amount} ₽\n\n"
+            f"💷 Переведите ТОЧНУЮ СУММУ: {usdt_amount} USDT (TON)\n\n"
+            "👛 На кошелёк:\n"
+            f"`{TON_WALLET}`\n\n"
+            "💬 MEMO:\n"
+            f"`{memo}`",
+            reply_markup=kb,
+            parse_mode="Markdown"
+        )
+
+    if d.startswith("check_"):
         order_id = d.split("_", 1)[1]
 
         row = cur.execute(
@@ -414,6 +418,19 @@ return await q.edit_message_text(
             )
 
         return await q.answer("Оплата ещё не найдена", show_alert=True)
+
+    if d=="premium":
+        kb = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("💳 СПБ", callback_data="prem_spb"),
+                InlineKeyboardButton("💎 TON / USDT", callback_data="prem_crypto")
+            ],
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile")]
+        ])
+        return await q.edit_message_text(
+            "💎 Premium StarsGo\n\n999 ₽\nСкидка 20% на все покупки.",
+            reply_markup=kb
+        )
     if d=="premium":
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="prem_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="prem_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
         return await q.edit_message_text("💎 Premium StarsGo\n\n999 ₽\nСкидка 20% на все покупки.", reply_markup=kb)
