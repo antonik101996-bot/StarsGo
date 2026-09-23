@@ -38,11 +38,16 @@ def calc(stars, username):
     p = round(stars * PRICE_PER_STAR)
     return round(p * 0.80) if is_premium(username) else p
 
-MENU = ReplyKeyboardMarkup([["⭐ Купить Stars"],["👑 Telegram Premium"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"]], resize_keyboard=True)
+def get_menu(username):
+    rows=[["⭐ Купить Stars"],["👑 Telegram Premium"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"]]
+    if username==ADMIN:
+        rows.append(["⚙️ Админ"])
+    return ReplyKeyboardMarkup(rows, resize_keyboard=True)
+
 
 async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data.clear()
-    await update.message.reply_text("✨ Добро пожаловать в StarsGo!", reply_markup=MENU)
+    await update.message.reply_text("✨ Добро пожаловать в StarsGo!", reply_markup=get_menu(update.effective_user.username))
 
 async def profile(update:Update,ctx):
     u=update.effective_user
@@ -90,6 +95,9 @@ async def text(update,ctx):
 
     if t == "💬 Поддержка":
         return await support(update,ctx)
+
+    if t == "⚙️ Админ" and update.effective_user.username == ADMIN:
+        return await admin(update,ctx)
 
     if t == "👑 Telegram Premium":
         kb = InlineKeyboardMarkup([
