@@ -384,8 +384,9 @@ async def cb(update,ctx):
             f"💬 MEMO:\n{memo}",
             reply_markup=kb
         )
+        
         if d.startswith("check_"):
-        order_id = d.split("_")[1]
+            order_id = d.split("_")[1]
 
         row = cur.execute(
             "SELECT memo, usdt_amount, stars, status FROM orders WHERE order_id=?",
@@ -408,8 +409,7 @@ async def cb(update,ctx):
             db.commit()
 
             return await q.edit_message_text(
-                f"✅ Оплата подтверждена!\n\n"
-                f"Начислить пользователю {stars} ⭐"
+                f"✅ Оплата подтверждена!\n\nНачислить {stars} ⭐"
             )
 
         return await q.answer("Оплата ещё не найдена", show_alert=True)
