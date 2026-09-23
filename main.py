@@ -389,7 +389,7 @@ async def cb(update,ctx):
             reply_markup=kb,
             parse_mode="Markdown"
         )
-        if d.startswith("check_"):
+   if d.startswith("check_"):
         order_id = d.split("_", 1)[1]
 
         row = cur.execute(
