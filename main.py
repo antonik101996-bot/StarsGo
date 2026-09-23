@@ -56,7 +56,7 @@ def get_menu(username):
 
 async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data.clear()
-    await update.message.reply_text("🚀 *StarsGo V2*\n\nПокупайте Stars и Telegram Premium быстро и безопасно.", reply_markup=get_menu(update.effective_user.username), parse_mode="Markdown")
+    await update.message.reply_text("✨ *StarsGo V4 PRO*\n━━━━━━━━━━\n⭐ Покупка Stars\n👑 Telegram Premium\n💎 GRAM / USDT\n━━━━━━━━━━\nВыберите раздел в меню ниже.", reply_markup=get_menu(update.effective_user.username), parse_mode="Markdown")
 
 async def profile(update:Update,ctx):
     u=update.effective_user
@@ -103,7 +103,7 @@ async def pay_menu(update,ctx):
     stars=ctx.user_data["stars"]; price=calc(stars, update.effective_user.username)
     kb=InlineKeyboardMarkup([
       [InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],
-      [InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
+      [InlineKeyboardButton("◀️ Назад",callback_data="back_buy"),InlineKeyboardButton("🏠 Меню",callback_data="home")]])
     await update.message.reply_text(f"🛒 Подтверждение\n\nКоличество: {stars} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
 async def text(update,ctx):
@@ -386,6 +386,9 @@ async def cb(update,ctx):
         ctx.user_data["state"]="change_rate"
         return await q.message.reply_text(f"💲 Текущий курс: {PRICE_PER_STAR}\n\nВведите новый курс (например 1.38)")
         
+    if d=="home":
+        return await q.edit_message_text("🏠 Главное меню\n\nИспользуйте кнопки снизу для выбора раздела.")
+
     if d=="back_profile": return await q.edit_message_text("👤 Закройте сообщение и используйте меню снизу.")
     if d=="back_buy":
         kb=InlineKeyboardMarkup([
@@ -401,7 +404,7 @@ async def cb(update,ctx):
     if d.startswith("s"):
         ctx.user_data["stars"]=int(d[1:])
         price=calc(ctx.user_data["stars"], q.from_user.username)
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy"),InlineKeyboardButton("🏠 Меню",callback_data="home")]])
         return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
 
@@ -409,7 +412,7 @@ async def cb(update,ctx):
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("🪙 GRAM (TON)", callback_data="pay_grm")],
             [InlineKeyboardButton("💵 USDT (TON)", callback_data="pay_usdt")],
-            [InlineKeyboardButton("◀️ Назад", callback_data="back_buy")]
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_buy"),InlineKeyboardButton("🏠 Меню",callback_data="home")]
         ])
         return await q.edit_message_text(
             "💎 Криптовалюта\n\nВыберите валюту:",
@@ -458,7 +461,7 @@ async def cb(update,ctx):
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("💳 СПБ", callback_data="tg_spb"),
              InlineKeyboardButton("💎 Криптовалюта", callback_data="tg_crypto")],
-            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile")]
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile"),InlineKeyboardButton("🏠 Меню",callback_data="home")]
         ])
 
         return await q.edit_message_text(
@@ -523,7 +526,7 @@ async def cb(update,ctx):
                 InlineKeyboardButton("💳 СПБ", callback_data="prem_spb"),
                 InlineKeyboardButton("💎 TON / USDT", callback_data="prem_crypto")
             ],
-            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile")]
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile"),InlineKeyboardButton("🏠 Меню",callback_data="home")]
         ])
         return await q.edit_message_text(
             "💎 Premium StarsGo\n\n999 ₽\nСкидка 20% на все покупки.",
