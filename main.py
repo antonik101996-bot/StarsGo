@@ -385,15 +385,15 @@ async def cb(update,ctx):
             reply_markup=kb
         )
         
-        if d.startswith("check_"):
-            order_id = d.split("_")[1]
+    if d.startswith("check_"):
+        order_id = d.split("_", 1)[1]
 
         row = cur.execute(
             "SELECT memo, usdt_amount, stars, status FROM orders WHERE order_id=?",
             (order_id,)
         ).fetchone()
 
-        if not row:
+        if row is None:
             return await q.answer("Заказ не найден", show_alert=True)
 
         memo, usdt, stars, status = row
@@ -401,7 +401,9 @@ async def cb(update,ctx):
         if status == "paid":
             return await q.answer("Уже оплачено ✅", show_alert=True)
 
-        if check_payment(memo, usdt):
+        ok = check_payment(memo, usdt)
+
+        if ok:
             cur.execute(
                 "UPDATE orders SET status='paid', paid_at=? WHERE order_id=?",
                 (int(time.time()), order_id)
@@ -409,10 +411,14 @@ async def cb(update,ctx):
             db.commit()
 
             return await q.edit_message_text(
-                f"✅ Оплата подтверждена!\n\nНачислить {stars} ⭐"
+                f"✅ Оплата подтверждена!\n\n"
+                f"Выдано: {stars} ⭐"
             )
 
-        return await q.answer("Оплата ещё не найдена", show_alert=True)
+        return await q.answer(
+            "Оплата ещё не найдена",
+            show_alert=True
+        )
 
     if d=="premium":
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="prem_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="prem_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
