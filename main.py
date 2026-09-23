@@ -304,7 +304,8 @@ def check_payment(memo, usdt_amount):
     return False
 
 async def cb(update,ctx):
-    q=update.callback_query; await q.answer(); d=q.data
+    q=update.callback_query
+    d=q.data
     if d == "admin_users":
         cur.execute("SELECT COUNT(*) FROM premium")
         count = cur.fetchone()[0]
@@ -363,37 +364,35 @@ async def cb(update,ctx):
             parse_mode="Markdown"
         )
     if d.startswith("check_"):
-        try:
-            order_id = d.split("_", 1)[1]
+        await q.answer()
 
-            row = cur.execute(
-                "SELECT memo, usdt_amount, stars, status FROM orders WHERE order_id=?",
-                (order_id,)
-            ).fetchone()
+        order_id = d.split("_", 1)[1]
 
-            if row is None:
-                return await q.answer("Заказ не найден", show_alert=True)
+        row = cur.execute(
+            "SELECT memo, usdt_amount, stars, status FROM orders WHERE order_id=?",
+            (order_id,)
+        ).fetchone()
 
-            memo, usdt, stars, status = row
+        if row is None:
+            return await q.answer("Заказ не найден", show_alert=True)
 
-            if status == "paid":
-                return await q.answer("Уже оплачено ✅", show_alert=True)
+        memo, usdt, stars, status = row
 
-            if check_payment(memo, usdt):
-                cur.execute(
-                    "UPDATE orders SET status='paid', paid_at=? WHERE order_id=?",
-                    (int(time.time()), order_id)
-                )
-                db.commit()
+        if status == "paid":
+            return await q.answer("Уже оплачено ✅", show_alert=True)
 
-                return await q.edit_message_text(
-                    f"✅ Оплата подтверждена!\n\nВыдано: {stars} ⭐"
-                )
+        if check_payment(memo, usdt):
+            cur.execute(
+                "UPDATE orders SET status='paid', paid_at=? WHERE order_id=?",
+                (int(time.time()), order_id)
+            )
+            db.commit()
 
-            return await q.answer("Оплата ещё не найдена", show_alert=True)
+            return await q.edit_message_text(
+                f"✅ Оплата подтверждена!\n\nВыдано: {stars} ⭐"
+            )
 
-        except Exception as e:
-            return await q.answer(str(e), show_alert=True)
+        return await q.answer("Оплата ещё не найдена", show_alert=True)
 
     if d=="premium":
         kb = InlineKeyboardMarkup([
