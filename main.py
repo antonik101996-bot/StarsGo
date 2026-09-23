@@ -412,8 +412,8 @@ async def cb(update,ctx):
     if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
 
     if d in ["tg3","tg6","tg12"]:
-        months = {"tg3":"3 месяца","tg6":"6 месяцев","tg12":"12 месяцев"}[d]
-        price = {"tg3":999,"tg6":1299,"tg12":2299}[d]
+        ctx.user_data["tg_months"] = {"tg3":"3 месяца","tg6":"6 месяцев","tg12":"12 месяцев"}[d]
+        ctx.user_data["tg_price"] = {"tg3":999,"tg6":1299,"tg12":2299}[d]
 
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("💳 СПБ", callback_data="tg_spb"),
@@ -422,45 +422,21 @@ async def cb(update,ctx):
         ])
 
         return await q.edit_message_text(
-            f"👑 Telegram Premium\n\n{months}\nЦена: {price} ₽",
+            f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\nЦена: {ctx.user_data['tg_price']} ₽",
             reply_markup=kb
         )
 
-
     if d=="tg_spb":
-        price={"3 месяца":999,"6 месяцев":1299,"12 месяцев":2299}[ctx.user_data.get("tg_months","3 месяца")]
         return await q.edit_message_text(
-            f"💳 Telegram Premium\n\n{ctx.user_data.get('tg_months')}\nК оплате: {price} ₽"
+            f"💳 Telegram Premium\n\n{ctx.user_data['tg_months']}\nК оплате: {ctx.user_data['tg_price']} ₽"
         )
 
     if d=="tg_crypto":
-        kb=InlineKeyboardMarkup([
-            [InlineKeyboardButton("💎 GRM",callback_data="tg_grm"),
-             InlineKeyboardButton("💵 USDT (TON)",callback_data="tg_usdt")]
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("💎 GRM", callback_data="tg_grm"),
+             InlineKeyboardButton("💵 USDT (TON)", callback_data="tg_usdt")]
         ])
-        return await q.edit_message_text(
-            "💎 Выберите криптовалюту:",
-            reply_markup=kb
-        )
-
-    if d in ["tg_grm","tg_usdt"]:
-        price={"3 месяца":999,"6 месяцев":1299,"12 месяцев":2299}[ctx.user_data.get("tg_months","3 месяца")]
-        usdt=round(price/USDT_RATE,2)
-        order_id,memo=create_order(
-            q.from_user.username or str(q.from_user.id),
-            0,price,usdt,TON_WALLET
-        )
-        coin="GRM" if d=="tg_grm" else "USDT (TON)"
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату",callback_data=f"check_{order_id}")]])
-        return await q.edit_message_text(
-            f"👑 Telegram Premium\n\n{ctx.user_data.get('tg_months')}\n"
-            f"Валюта: {coin}\n\n"
-            f"Сумма: {usdt} USDT\n\n"
-            f"Кошелёк:\n`{TON_WALLET}`\n\n"
-            f"MEMO:\n`{memo}`",
-            reply_markup=kb,
-            parse_mode="Markdown"
-        )
+        return await q.edit_message_text("💎 Выберите криптовалюту:", reply_markup=kb)
 
     if d=="pay_spb":
         return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
