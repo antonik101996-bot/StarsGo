@@ -57,9 +57,10 @@ async def profile(update:Update,ctx):
 
 async def buy(update:Update,ctx):
     kb=InlineKeyboardMarkup([
-      [InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("300 ⭐",callback_data="s300")],
-      [InlineKeyboardButton("500 ⭐",callback_data="s500")],
-      [InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")]])
+      [InlineKeyboardButton("100 ⭐",callback_data="s100"), InlineKeyboardButton("200 ⭐",callback_data="s200")],
+      [InlineKeyboardButton("300 ⭐",callback_data="s300"), InlineKeyboardButton("400 ⭐",callback_data="s400")],
+      [InlineKeyboardButton("500 ⭐",callback_data="s500"), InlineKeyboardButton("1000 ⭐",callback_data="s1000")],
+      [InlineKeyboardButton("✏️ Другое",callback_data="custom")]])
     await update.message.reply_text("⭐ Выберите количество Stars:", reply_markup=kb)
 
 async def rate(update,ctx):
@@ -308,7 +309,12 @@ async def cb(update,ctx):
         
     if d=="back_profile": return await q.edit_message_text("👤 Закройте сообщение и используйте меню снизу.")
     if d=="back_buy":
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("300 ⭐",callback_data="s300")],[InlineKeyboardButton("500 ⭐",callback_data="s500")],[InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")]])
+        kb=InlineKeyboardMarkup([
+            [InlineKeyboardButton("100 ⭐",callback_data="s100"), InlineKeyboardButton("200 ⭐",callback_data="s200")],
+            [InlineKeyboardButton("300 ⭐",callback_data="s300"), InlineKeyboardButton("400 ⭐",callback_data="s400")],
+            [InlineKeyboardButton("500 ⭐",callback_data="s500"), InlineKeyboardButton("1000 ⭐",callback_data="s1000")],
+            [InlineKeyboardButton("✏️ Другое",callback_data="custom")]
+        ])
         return await q.edit_message_text("⭐ Выберите количество Stars:", reply_markup=kb)
     if d=="custom":
         ctx.user_data["state"]="custom_amount"
