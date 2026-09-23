@@ -294,6 +294,15 @@ def check_payment(memo, usdt_amount):
 
     return False
 
+    for tx in data.get("transactions", []):
+        comment = tx.get("comment", "")
+        amount = float(tx.get("amount", 0)) / 1000000
+
+        if comment == memo and abs(amount - usdt_amount) <= 0.01:
+            return True
+
+    return False
+
 async def cb(update,ctx):
     q=update.callback_query; await q.answer(); d=q.data
     if d == "admin_users":
@@ -354,33 +363,37 @@ async def cb(update,ctx):
             parse_mode="Markdown"
         )
     if d.startswith("check_"):
-        order_id = d.split("_", 1)[1]
+        try:
+            order_id = d.split("_", 1)[1]
 
-        row = cur.execute(
-            "SELECT memo, usdt_amount, stars, status FROM orders WHERE order_id=?",
-            (order_id,)
-        ).fetchone()
+            row = cur.execute(
+                "SELECT memo, usdt_amount, stars, status FROM orders WHERE order_id=?",
+                (order_id,)
+            ).fetchone()
 
-        if row is None:
-            return await q.answer("Заказ не найден", show_alert=True)
+            if row is None:
+                return await q.answer("Заказ не найден", show_alert=True)
 
-        memo, usdt, stars, status = row
+            memo, usdt, stars, status = row
 
-        if status == "paid":
-            return await q.answer("Уже оплачено ✅", show_alert=True)
+            if status == "paid":
+                return await q.answer("Уже оплачено ✅", show_alert=True)
 
-        if check_payment(memo, usdt):
-            cur.execute(
-                "UPDATE orders SET status='paid', paid_at=? WHERE order_id=?",
-                (int(time.time()), order_id)
-            )
-            db.commit()
+            if check_payment(memo, usdt):
+                cur.execute(
+                    "UPDATE orders SET status='paid', paid_at=? WHERE order_id=?",
+                    (int(time.time()), order_id)
+                )
+                db.commit()
 
-            return await q.edit_message_text(
-                f"✅ Оплата подтверждена!\n\nВыдано: {stars} ⭐"
-            )
+                return await q.edit_message_text(
+                    f"✅ Оплата подтверждена!\n\nВыдано: {stars} ⭐"
+                )
 
-        return await q.answer("Оплата ещё не найдена", show_alert=True)
+            return await q.answer("Оплата ещё не найдена", show_alert=True)
+
+        except Exception as e:
+            return await q.answer(str(e), show_alert=True)
 
     if d=="premium":
         kb = InlineKeyboardMarkup([
@@ -398,6 +411,8 @@ async def cb(update,ctx):
     if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
     if d=="pay_spb":
         return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
+    if d=="pay_crypto":
+        return await q.edit_message_text(f"💎 TON / USDT\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
 async def cmd_premium(update,ctx):
     if update.effective_user.username!=ADMIN: return
     p=update.message.text.split()
