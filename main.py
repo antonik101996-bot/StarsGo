@@ -90,14 +90,6 @@ async def text(update,ctx):
     if t == "💬 Поддержка":
         return await support(update,ctx)
 
-    if t == "👑 Telegram Premium":
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("3 месяца • 999 ₽", callback_data="tg3")],
-            [InlineKeyboardButton("6 месяцев • 1299 ₽", callback_data="tg6")],
-            [InlineKeyboardButton("12 месяцев • 2299 ₽", callback_data="tg12")]
-        ])
-        return await update.message.reply_text("👑 Telegram Premium\n\nВыберите срок:", reply_markup=kb)
-
     if ctx.user_data.get("state") == "custom_amount":
         if not t.isdigit():
             return await update.message.reply_text("Введите число.")
@@ -411,16 +403,25 @@ async def cb(update,ctx):
     if d in ["tg3","tg6","tg12"]:
         months = {"tg3":"3 месяца","tg6":"6 месяцев","tg12":"12 месяцев"}[d]
         price = {"tg3":999,"tg6":1299,"tg12":2299}[d]
-        ctx.user_data["stars"] = 0
-        ctx.user_data["tg_price"] = price
+
         ctx.user_data["tg_months"] = months
+        ctx.user_data["tg_price"] = price
+
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("💳 СПБ", callback_data="tg_spb"),
              InlineKeyboardButton("💎 TON / USDT", callback_data="tg_crypto")]
         ])
+
         return await q.edit_message_text(
             f"👑 Telegram Premium\n\n{months}\nЦена: {price} ₽",
             reply_markup=kb
+        )
+
+    if d=="tg_spb":
+        return await q.edit_message_text(
+            f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n"
+            f"💳 К оплате: {ctx.user_data['tg_price']} ₽\n\n"
+            "После оплаты напишите @Lakizyx"
         )
 
     if d=="tg_crypto":
@@ -428,58 +429,9 @@ async def cb(update,ctx):
             [InlineKeyboardButton("💎 GRM", callback_data="tg_grm"),
              InlineKeyboardButton("💵 USDT (TON)", callback_data="tg_usdt")]
         ])
-        return await q.edit_message_text("Выберите криптовалюту:", reply_markup=kb)
-
-    if d in ["tg_grm","tg_usdt"]:
-        price = ctx.user_data["tg_price"]
-        usdt = round(price / USDT_RATE, 2)
-        order_id, memo = create_order(
-            q.from_user.username or str(q.from_user.id),
-            0, price, usdt, TON_WALLET
-        )
-        coin = "GRM" if d=="tg_grm" else "USDT (TON)"
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔄 Проверить оплату", callback_data=f"check_{order_id}")]
-        ])
         return await q.edit_message_text(
-            f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n"
-            f"Цена: {price} ₽\n"
-            f"Валюта: {coin}\n\n"
-            f"Сумма: {usdt}\n"
-            f"Кошелёк:\n`{TON_WALLET}`\n\n"
-            f"MEMO:\n`{memo}`",
-            reply_markup=kb,
-            parse_mode="Markdown"
-        )
-
-    if d=="pay_crypto":
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("💎 GRM", callback_data="pay_grm"),
-             InlineKeyboardButton("💵 USDT (TON)", callback_data="pay_usdt")],
-            [InlineKeyboardButton("◀️ Назад", callback_data="back_buy")]
-        ])
-        return await q.edit_message_text("Выберите криптовалюту:", reply_markup=kb)
-
-    if d in ["pay_grm","pay_usdt"]:
-        stars = ctx.user_data["stars"]
-        rub = calc(stars, q.from_user.username)
-        usdt = round(rub / USDT_RATE, 2)
-        order_id, memo = create_order(
-            q.from_user.username or str(q.from_user.id),
-            stars, rub, usdt, TON_WALLET
-        )
-        coin = "GRM" if d=="pay_grm" else "USDT (TON)"
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔄 Проверить оплату", callback_data=f"check_{order_id}")]
-        ])
-        return await q.edit_message_text(
-            f"⭐ Stars\n\n{stars} ⭐\n"
-            f"Валюта: {coin}\n"
-            f"Сумма: {usdt}\n\n"
-            f"Кошелёк:\n`{TON_WALLET}`\n\n"
-            f"MEMO:\n`{memo}`",
-            reply_markup=kb,
-            parse_mode="Markdown"
+            "Выберите криптовалюту:",
+            reply_markup=kb
         )
 
     if d=="pay_spb":
