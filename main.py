@@ -63,13 +63,13 @@ async def profile(update:Update,ctx):
     bal=cur.execute("SELECT balance FROM balances WHERE username=?",( (u.username or "").lower(),)).fetchone()
     balance=bal[0] if bal else 0
     cnt=cur.execute("SELECT COUNT(*) FROM orders WHERE username=?",( (u.username or "").lower(),)).fetchone()[0]
-    txt=f"╔════════════╗\n🌟 ПРОФИЛЬ STARSGO\n╚════════════╝\n\nИмя: {u.first_name}\nUsername: @{u.username or 'нет'}\nID: {u.id}\nPremium Telegram: {'Да' if u.is_premium else 'Нет'}\nБаланс: {balance:g} ₽\nЗаказов: {cnt}\n\n"
+    txt=f"🌟 *Профиль StarsGo*\n\nИмя: {u.first_name}\nUsername: @{u.username or 'нет'}\nID: {u.id}\nPremium Telegram: {'Да' if u.is_premium else 'Нет'}\nБаланс: {balance:g} ₽\nЗаказов: {cnt}\n\n"
     if is_premium(u.username):
         txt += "🔥 У ВАС УЖЕ ЕСТЬ PREMIUM ПОДПИСКА\nСкидка 20% активна."
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
     else:
-        txt += "💎 Premium StarsGo\n999 ₽ • Скидка 20%"
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💎 Купить Premium",callback_data="premium")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
+        txt += "👑 Premium StarsGo\n\n• Подписка: 1 месяц\n• Скидка 20% на все Stars\n• Безлимитная покупка Stars"
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("👑 Premium StarsGo",callback_data="premium")],[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
     await update.message.reply_text(txt, reply_markup=kb)
 
 async def buy(update:Update,ctx):
@@ -526,20 +526,39 @@ async def cb(update,ctx):
         kb = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("💳 СПБ", callback_data="prem_spb"),
-                InlineKeyboardButton("💎 TON / USDT", callback_data="prem_crypto")
+                InlineKeyboardButton("💎 Криптовалюта", callback_data="prem_crypto")
             ],
             [InlineKeyboardButton("◀️ Назад", callback_data="back_profile"),InlineKeyboardButton("🏠 Меню",callback_data="home")]
         ])
         return await q.edit_message_text(
-            "💎 Premium StarsGo\n\n999 ₽\nСкидка 20% на все покупки.",
+            "👑 Premium StarsGo\n\nПодписка: 1 месяц\nСкидка: 20%\n\nВыберите способ оплаты:",
             reply_markup=kb
         )
-    if d=="prem_spb": return await q.edit_message_text("💳 Premium\n999 ₽\nПосле оплаты: @Lakizyx")
-    if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
+    if d=="prem_spb": return await q.edit_message_text("⚠️ Способ оплаты временно недоступен")
+    if d=="prem_crypto":
+        kb=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🪙 GRAM (TON)",callback_data="prem_grm")],
+            [InlineKeyboardButton("💵 USDT (TON)",callback_data="prem_usdt")],
+            [InlineKeyboardButton("◀️ Назад",callback_data="premium")]
+        ])
+        return await q.edit_message_text("💎 Криптовалюта\n\nВыберите валюту:",reply_markup=kb)
 
+
+
+    if d=="prem_grm" or d=="prem_usdt":
+        coin="GRAM (TON)" if d=="prem_grm" else "USDT (TON)"
+        wallet=GRAM_WALLET if d=="prem_grm" else USDT_WALLET
+        memo=str(uuid.uuid4())
+        usdt=round(999/USDT_RATE,2)
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату",callback_data="check_premium")]])
+        await q.edit_message_text("⏳ Создаю счёт...")
+        await __import__("asyncio").sleep(1)
+        return await q.edit_message_text(
+            f"👑 Premium StarsGo\n\n💎 {coin}\nСумма: {usdt}\n\nКошелёк:\n`{wallet}`\n\nMEMO:\n`{memo}`",
+            reply_markup=kb,parse_mode="Markdown")
 
     if d=="pay_spb":
-        return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
+        return await q.edit_message_text("⚠️ Способ оплаты временно недоступен")
 async def cmd_premium(update,ctx):
     if update.effective_user.username!=ADMIN: return
     p=update.message.text.split()
