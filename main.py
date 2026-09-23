@@ -30,6 +30,12 @@ db.commit()
 
 cur.execute(""" CREATE TABLE IF NOT EXISTS balances ( username TEXT PRIMARY KEY, balance REAL DEFAULT 0 ) """)
 db.commit()
+cur.execute(""" CREATE TABLE IF NOT EXISTS settings ( k TEXT PRIMARY KEY, v TEXT ) """)
+db.commit()
+row=cur.execute("SELECT v FROM settings WHERE k='price'").fetchone()
+if row:
+    PRICE_PER_STAR=float(row[0])
+
 def is_premium(username):
     if not username: return False
     return cur.execute("SELECT 1 FROM premium WHERE username=?",(username.lower(),)).fetchone() is not None
@@ -85,6 +91,15 @@ async def pay_menu(update,ctx):
 
 async def text(update,ctx):
     t = update.message.text
+
+    if ctx.user_data.get("state")=="change_rate":
+        try:
+            global PRICE_PER_STAR
+            PRICE_PER_STAR=float(t.replace(",", "."))
+            cur.execute("INSERT OR REPLACE INTO settings VALUES(?,?)",("price",str(PRICE_PER_STAR))); db.commit(); ctx.user_data["state"]=None
+            return await update.message.reply_text(f"✅ Новый курс: {PRICE_PER_STAR} ₽")
+        except:
+            return await update.message.reply_text("Введите число, например 1.35")
 
     if t == "⭐ Купить Stars":
         if not STARS_OPEN:
@@ -343,6 +358,9 @@ async def cb(update,ctx):
         return await q.message.reply_text("💰 Раздел балансов открыт")
     if d == "admin_stars":
         return await q.message.reply_text("⭐ Раздел Stars открыт")
+    if d=="admin_rate":
+        ctx.user_data["state"]="change_rate"
+        return await q.message.reply_text(f"💲 Текущий курс: {PRICE_PER_STAR}\n\nВведите новый курс (например 1.38)")
         
     if d=="back_profile": return await q.edit_message_text("👤 Закройте сообщение и используйте меню снизу.")
     if d=="back_buy":
@@ -459,7 +477,7 @@ async def cb(update,ctx):
 
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("💳 СПБ", callback_data="tg_spb"),
-             InlineKeyboardButton("💎 TON / USDT", callback_data="tg_crypto")],
+             InlineKeyboardButton("💎 Криптовалюта", callback_data="tg_crypto")],
             [InlineKeyboardButton("◀️ Назад", callback_data="back_profile")]
         ])
 
@@ -479,6 +497,13 @@ async def cb(update,ctx):
              InlineKeyboardButton("💵 USDT (TON)", callback_data="tg_usdt")]
         ])
         return await q.edit_message_text("💎 Выберите криптовалюту:", reply_markup=kb)
+
+    if d=="tg_grm" or d=="tg_usdt":
+        coin="GRAM (TON)" if d=="tg_grm" else "USDT (TON)"
+        memo=str(uuid.uuid4())
+        usdt=round(ctx.user_data["tg_price"]/USDT_RATE,2)
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату",callback_data="check_premium")]])
+        return await q.edit_message_text(f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n💎 {coin}\n\nСумма: {usdt}\n\nКошелёк:\n`{TON_WALLET}`\n\nMEMO:\n`{memo}`",reply_markup=kb,parse_mode="Markdown")
 
     if d=="pay_spb":
         return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
@@ -500,6 +525,7 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("👤 Пользователи", callback_data="admin_users")],
         [InlineKeyboardButton("💰 Балансы", callback_data="admin_balances")],
         [InlineKeyboardButton("⭐ Stars", callback_data="admin_stars")],
+        [InlineKeyboardButton("💲 Изменить курс", callback_data="admin_rate")],
         [InlineKeyboardButton("➕ Выдать баланс", callback_data="admin_give")],
         [InlineKeyboardButton("➖ Снять баланс", callback_data="admin_take")],
         [InlineKeyboardButton("🚫 Блокировка", callback_data="admin_block")],
