@@ -1,4 +1,4 @@
-# StarsGo V2 - main.py
+# StarsGo V5 - main.py
 # python-telegram-bot 20+
 import os, sqlite3, uuid, time
 import requests
@@ -63,7 +63,7 @@ async def profile(update:Update,ctx):
     bal=cur.execute("SELECT balance FROM balances WHERE username=?",( (u.username or "").lower(),)).fetchone()
     balance=bal[0] if bal else 0
     cnt=cur.execute("SELECT COUNT(*) FROM orders WHERE username=?",( (u.username or "").lower(),)).fetchone()[0]
-    txt=f"👤 Профиль\n\nИмя: {u.first_name}\nUsername: @{u.username or 'нет'}\nID: {u.id}\nPremium Telegram: {'Да' if u.is_premium else 'Нет'}\nБаланс: {balance:g} ₽\nЗаказов: {cnt}\n\n"
+    txt=f"╔════════════╗\n🌟 ПРОФИЛЬ STARSGO\n╚════════════╝\n\nИмя: {u.first_name}\nUsername: @{u.username or 'нет'}\nID: {u.id}\nPremium Telegram: {'Да' if u.is_premium else 'Нет'}\nБаланс: {balance:g} ₽\nЗаказов: {cnt}\n\n"
     if is_premium(u.username):
         txt += "🔥 У ВАС УЖЕ ЕСТЬ PREMIUM ПОДПИСКА\nСкидка 20% активна."
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад",callback_data="back_profile")]])
@@ -96,7 +96,7 @@ async def my_orders(update,ctx):
         return await update.message.reply_text("📦 У вас пока нет заказов.")
     txt="📦 Последние заказы\n\n"
     for s,st,_ in rows:
-        txt+=f"⭐ {s} • {'✅ Оплачен' if st=='paid' else '⏳ Ожидает'}\n"
+        dt=time.strftime('%d.%m.%Y', time.localtime(_)); txt+=f"⭐ {s} • {'✅ Оплачен' if st=='paid' else '⏳ Ожидает'}\n📅 {dt}\n\n"
     await update.message.reply_text(txt)
 
 async def pay_menu(update,ctx):
@@ -443,6 +443,7 @@ async def cb(update,ctx):
             [InlineKeyboardButton("🔄 Проверить оплату", callback_data=f"check_{order_id}")]
         ])
 
+        await q.edit_message_text("⏳ Создаю счёт...")
         return await q.edit_message_text(
             f"⭐ Покупка Stars\n\n"
             f"🎁 Товар: {stars} ⭐\n"
@@ -486,7 +487,8 @@ async def cb(update,ctx):
         wallet = GRAM_WALLET if d=="tg_grm" else USDT_WALLET
         memo=str(uuid.uuid4())
         usdt=round(ctx.user_data["tg_price"]/USDT_RATE,2)
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату",callback_data="check_premium")]])
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату",callback_data="check_premium")],[InlineKeyboardButton("🏠 Меню",callback_data="home")]])
+        await q.edit_message_text("⏳ Создаю счёт...")
         return await q.edit_message_text(f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n💎 {coin}\n\nСумма: {usdt}\n\nКошелёк:\n`{wallet}`\n\nMEMO:\n`{memo}`",reply_markup=kb,parse_mode="Markdown")
 
     if d.startswith("check_"):
