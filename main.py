@@ -79,7 +79,7 @@ async def support(update,ctx):
 async def pay_menu(update,ctx):
     stars=ctx.user_data["stars"]; price=calc(stars, update.effective_user.username)
     kb=InlineKeyboardMarkup([
-      [InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")],
+      [InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],
       [InlineKeyboardButton("◀️ Назад",allback_data="back_buy")]])
     await update.message.reply_text(f"🛒 Подтверждение\n\nКоличество: {stars} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
@@ -322,15 +322,16 @@ def check_payment(memo, usdt_amount):
     return False
 
 async def cb(update,ctx):
-    global STARS_OPEN, PREMIUM_OPEN
     q=update.callback_query
     d=q.data
     if d=="toggle_stars":
+        global STARS_OPEN
         STARS_OPEN=not STARS_OPEN
         kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")]])
         return await q.edit_message_text("⚙️ Админ-панель",reply_markup=kb)
 
     if d=="toggle_premium":
+        global PREMIUM_OPEN
         PREMIUM_OPEN=not PREMIUM_OPEN
         kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")]])
         return await q.edit_message_text("⚙️ Админ-панель",reply_markup=kb)
@@ -359,11 +360,22 @@ async def cb(update,ctx):
     if d.startswith("s"):
         ctx.user_data["stars"]=int(d[1:])
         price=calc(ctx.user_data["stars"], q.from_user.username)
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 TON / USDT",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
         return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
 
     if d=="pay_crypto":
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🪙 GRAM (TON)", callback_data="pay_grm")],
+            [InlineKeyboardButton("💵 USDT (TON)", callback_data="pay_usdt")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_buy")]
+        ])
+        return await q.edit_message_text(
+            "💎 Криптовалюта\n\nВыберите валюту:",
+            reply_markup=kb
+        )
+
+    if d=="pay_grm" or d=="pay_usdt":
         stars = ctx.user_data.get("stars")
 
         if not stars:
@@ -380,61 +392,22 @@ async def cb(update,ctx):
             TON_WALLET
         )
 
+        coin = "GRAM (TON)" if d=="pay_grm" else "USDT (TON)"
+
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("🔄 Проверить оплату", callback_data=f"check_{order_id}")]
         ])
 
         return await q.edit_message_text(
-            "🤖 Счёт USDT (TON)\n\n"
-            f"➕ Получатель: @{ADMIN}\n"
+            f"⭐ Покупка Stars\n\n"
             f"🎁 Товар: {stars} ⭐\n"
-            f"👛 Сумма: {rub_amount} ₽\n\n"
-            f"💷 Переведите ТОЧНУЮ СУММУ: {usdt_amount} USDT (TON)\n\n"
-            "👛 На кошелёк:\n"
-            f"`{TON_WALLET}`\n\n"
-            "💬 MEMO:\n"
-            f"`{memo}`",
+            f"💎 Валюта: {coin}\n\n"
+            f"Сумма: {usdt_amount}\n\n"
+            f"Кошелёк:\n`{TON_WALLET}`\n\n"
+            f"MEMO:\n`{memo}`",
             reply_markup=kb,
             parse_mode="Markdown"
         )
-    if d in ["tg3","tg6","tg12"]:
-        ctx.user_data["tg_months"] = {"tg3":"3 месяца","tg6":"6 месяцев","tg12":"12 месяцев"}[d]
-        ctx.user_data["tg_price"] = {"tg3":999,"tg6":1299,"tg12":2299}[d]
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("💳 СПБ", callback_data="tg_spb"),
-             InlineKeyboardButton("💎 TON / USDT", callback_data="tg_crypto")],
-            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile")]
-        ])
-        return await q.edit_message_text(
-            f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\nЦена: {ctx.user_data['tg_price']} ₽",
-            reply_markup=kb
-        )
-
-    if d=="tg_spb":
-        return await q.edit_message_text(
-            f"💳 Telegram Premium\n\n{ctx.user_data['tg_months']}\nК оплате: {ctx.user_data['tg_price']} ₽"
-        )
-
-    if d=="tg_crypto":
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🪙 GRM", callback_data="tg_grm"),
-             InlineKeyboardButton("💵 USDT (TON)", callback_data="tg_usdt")],
-            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile")]
-        ])
-        return await q.edit_message_text("💎 Выберите валюту оплаты:", reply_markup=kb)
-
-    if d=="tg_grm" or d=="tg_usdt":
-        price = ctx.user_data["tg_price"]
-        memo = "PREM-" + str(uuid.uuid4())[:8]
-        usdt = round(price / USDT_RATE, 2)
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату", callback_data="check_premium")]])
-        coin = "GRAM" if d=="tg_grm" else "USDT (TON)"
-        return await q.edit_message_text(
-            f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n💳 {coin}\n\nСумма: {usdt}\n\nКошелёк:\n`{TON_WALLET}`\n\nMEMO:\n`{memo}`",
-            reply_markup=kb,
-            parse_mode="Markdown"
-        )
-
     if d.startswith("check_"):
         await q.answer()
 
@@ -480,6 +453,33 @@ async def cb(update,ctx):
         )
     if d=="prem_spb": return await q.edit_message_text("💳 Premium\n999 ₽\nПосле оплаты: @Lakizyx")
     if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
+
+    if d in ["tg3","tg6","tg12"]:
+        ctx.user_data["tg_months"] = {"tg3":"3 месяца","tg6":"6 месяцев","tg12":"12 месяцев"}[d]
+        ctx.user_data["tg_price"] = {"tg3":999,"tg6":1299,"tg12":2299}[d]
+
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("💳 СПБ", callback_data="tg_spb"),
+             InlineKeyboardButton("💎 TON / USDT", callback_data="tg_crypto")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile")]
+        ])
+
+        return await q.edit_message_text(
+            f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\nЦена: {ctx.user_data['tg_price']} ₽",
+            reply_markup=kb
+        )
+
+    if d=="tg_spb":
+        return await q.edit_message_text(
+            f"💳 Telegram Premium\n\n{ctx.user_data['tg_months']}\nК оплате: {ctx.user_data['tg_price']} ₽"
+        )
+
+    if d=="tg_crypto":
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("💎 GRM", callback_data="tg_grm"),
+             InlineKeyboardButton("💵 USDT (TON)", callback_data="tg_usdt")]
+        ])
+        return await q.edit_message_text("💎 Выберите криптовалюту:", reply_markup=kb)
 
     if d=="pay_spb":
         return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
