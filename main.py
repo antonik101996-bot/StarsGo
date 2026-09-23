@@ -8,7 +8,8 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 TOKEN = "8622886894:AAHbUeDjhOkpPOH2rsQFQcNWgMRlQm2IPZk"
 ADMIN = "Lakizyx"
 
-TON_WALLET = "UQDCNwjGlMioMvMqB8uKuBFyN202Zny9V4i_SOesSyCfydmb"
+GRAM_WALLET = "UQDCNwjGlMioMvMqB8uKuBFyN202Zny9V4i_SOesSyCfydmb"
+USDT_WALLET = "UQD6Naq0pdI-ea4_P2U1tAgj7rSHHLwJtEiHmXuXJSYK6L7l"
 TONCENTER_API = "fe4563f7b2b573f4091b2b89c2ceaf3a1f7c0e3666abcedcd0dc1b951ea3c82f"
 USDT_RATE = 84.50
 
@@ -77,9 +78,8 @@ async def buy(update:Update,ctx):
     await update.message.reply_text("⭐ Выберите количество Stars:", reply_markup=kb)
 
 async def rate(update,ctx):
-    price100 = round(100 * PRICE_PER_STAR)
     await update.message.reply_text(
-        f"📈 Курс Stars 100 ⭐ = {price100} ₽ 1 ⭐ = {PRICE_PER_STAR:.2f} ₽"
+        f"📈 Курс Stars 1 ⭐ = {PRICE_PER_STAR:.2f} ₽"
     )
 
 async def support(update,ctx):
@@ -321,7 +321,7 @@ def check_payment(memo, usdt_amount):
     url = "https://toncenter.com/api/v3/jetton/transfers"
 
     params = {
-        "account": TON_WALLET,
+        "account": GRAM_WALLET,
         "limit": 30,
         "direction": "in"
     }
@@ -408,12 +408,13 @@ async def cb(update,ctx):
         rub_amount = calc(stars, q.from_user.username)
         usdt_amount = round(rub_amount / USDT_RATE, 2)
 
+        wallet = GRAM_WALLET if d=="pay_grm" else USDT_WALLET
         order_id, memo = create_order(
             q.from_user.username or str(q.from_user.id),
             stars,
             rub_amount,
             usdt_amount,
-            TON_WALLET
+            wallet
         )
 
         coin = "GRAM (TON)" if d=="pay_grm" else "USDT (TON)"
@@ -427,7 +428,7 @@ async def cb(update,ctx):
             f"🎁 Товар: {stars} ⭐\n"
             f"💎 Валюта: {coin}\n\n"
             f"Сумма: {usdt_amount}\n\n"
-            f"Кошелёк:\n`{TON_WALLET}`\n\n"
+            f"Кошелёк:\n`{wallet}`\n\n"
             f"MEMO:\n`{memo}`",
             reply_markup=kb,
             parse_mode="Markdown"
@@ -462,10 +463,11 @@ async def cb(update,ctx):
 
     if d=="tg_grm" or d=="tg_usdt":
         coin="GRAM (TON)" if d=="tg_grm" else "USDT (TON)"
+        wallet = GRAM_WALLET if d=="tg_grm" else USDT_WALLET
         memo=str(uuid.uuid4())
         usdt=round(ctx.user_data["tg_price"]/USDT_RATE,2)
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату",callback_data="check_premium")]])
-        return await q.edit_message_text(f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n💎 {coin}\n\nСумма: {usdt}\n\nКошелёк:\n`{TON_WALLET}`\n\nMEMO:\n`{memo}`",reply_markup=kb,parse_mode="Markdown")
+        return await q.edit_message_text(f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n💎 {coin}\n\nСумма: {usdt}\n\nКошелёк:\n`{GRAM_WALLET}`\n\nMEMO:\n`{memo}`",reply_markup=kb,parse_mode="Markdown")
 
     if d.startswith("check_"):
         await q.answer()
