@@ -294,18 +294,8 @@ def check_payment(memo, usdt_amount):
 
     return False
 
-    for tx in data.get("transactions", []):
-        comment = tx.get("comment", "")
-        amount = float(tx.get("amount", 0)) / 1000000
-
-        if comment == memo and abs(amount - usdt_amount) <= 0.01:
-            return True
-
-    return False
-
 async def cb(update,ctx):
-    q = update.callback_query
-    d = q.data
+    q=update.callback_query; await q.answer(); d=q.data
     if d == "admin_users":
         cur.execute("SELECT COUNT(*) FROM premium")
         count = cur.fetchone()[0]
@@ -367,7 +357,6 @@ async def cb(update,ctx):
         await q.answer()
 
         order_id = d.split("_", 1)[1]
-
         row = cur.execute(
             "SELECT memo, usdt_amount, stars, status FROM orders WHERE order_id=?",
             (order_id,)
