@@ -38,7 +38,7 @@ def calc(stars, username):
     p = round(stars * PRICE_PER_STAR)
     return round(p * 0.80) if is_premium(username) else p
 
-MENU = ReplyKeyboardMarkup([["⭐ Купить Stars"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"],["👑 Telegram Premium"]], resize_keyboard=True)
+MENU = ReplyKeyboardMarkup([["⭐ Купить Stars"],["👑 Telegram Premium"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"]], resize_keyboard=True)
 
 async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data.clear()
@@ -92,11 +92,11 @@ async def text(update,ctx):
 
     if t == "👑 Telegram Premium":
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("3 месяца", callback_data="tgprem_3")],
-            [InlineKeyboardButton("6 месяцев", callback_data="tgprem_6")],
-            [InlineKeyboardButton("12 месяцев", callback_data="tgprem_12")]
+            [InlineKeyboardButton("3 месяца • 999 ₽", callback_data="tgprem3")],
+            [InlineKeyboardButton("6 месяцев • 1299 ₽", callback_data="tgprem6")],
+            [InlineKeyboardButton("12 месяцев • 2299 ₽", callback_data="tgprem12")]
         ])
-        return await update.message.reply_text("👑 Telegram Premium\n\nВыберите срок:", reply_markup=kb)
+        return await update.message.reply_text("👑 Telegram Premium\n\nВыберите подписку:", reply_markup=kb)
 
     if ctx.user_data.get("state") == "custom_amount":
         if not t.isdigit():
@@ -407,14 +407,14 @@ async def cb(update,ctx):
         )
     if d=="prem_spb": return await q.edit_message_text("💳 Premium\n999 ₽\nПосле оплаты: @Lakizyx")
     if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
-    if d=="tgprem_3":
-        return await q.edit_message_text("👑 Telegram Premium\n\n3 месяца")
+    if d=="tgprem3":
+        return await q.edit_message_text("👑 Telegram Premium\n\n3 месяца\n💳 Цена: 999 ₽")
 
-    if d=="tgprem_6":
-        return await q.edit_message_text("👑 Telegram Premium\n\n6 месяцев")
+    if d=="tgprem6":
+        return await q.edit_message_text("👑 Telegram Premium\n\n6 месяцев\n💳 Цена: 1299 ₽")
 
-    if d=="tgprem_12":
-        return await q.edit_message_text("👑 Telegram Premium\n\n12 месяцев")
+    if d=="tgprem12":
+        return await q.edit_message_text("👑 Telegram Premium\n\n12 месяцев\n💳 Цена: 2299 ₽")
 
     if d=="pay_spb":
         return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
