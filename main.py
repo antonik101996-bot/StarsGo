@@ -312,14 +312,30 @@ def create_order(username, stars, rub_amount, usdt_amount, wallet):
     return order_id, memo
     
 def check_payment(memo, usdt_amount):
-    url = f"https://toncenter.com/api/v3/transactions?account={TON_WALLET}&limit=30"
+    url = "https://toncenter.com/api/v3/jetton/transfers"
+
+    params = {
+        "account": TON_WALLET,
+        "limit": 30,
+        "direction": "in"
+    }
 
     headers = {"X-API-Key": TONCENTER_API}
 
     try:
-        data = requests.get(url, headers=headers, timeout=10).json()
+        r = requests.get(url, params=params, headers=headers, timeout=10)
+        data = r.json()
     except:
         return False
+
+    for tx in data.get("jetton_transfers", []):
+        comment = tx.get("comment", "")
+        amount = int(tx.get("amount", 0)) / 1000000
+
+        if comment == memo and abs(amount - usdt_amount) < 0.01:
+            return True
+
+    return False
 
     for tx in data.get("transactions", []):
         comment = tx.get("comment", "")
