@@ -391,7 +391,8 @@ async def cb(update,ctx):
         )
 
     if d.startswith("check_"):
-        return await q.answer("Кнопка работает ✅", show_alert=True)
+        print("CALLBACK:", d)
+        return await q.edit_message_text("✅ Кнопка работает")
 
     if d=="premium":
         kb = InlineKeyboardMarkup([
