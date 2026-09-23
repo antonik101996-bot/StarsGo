@@ -5,7 +5,7 @@ import requests
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-TOKEN = "8622886894:AAFx4qthluLkFBxb8ZOC0Q9lcxNjh35uzFg"
+TOKEN = "8622886894:AAHbUeDjhOkpPOH2rsQFQcNWgMRlQm2IPZk"
 ADMIN = "Lakizyx"
 
 TON_WALLET = "UQDCNwjGlMioMvMqB8uKuBFyN202Zny9V4i_SOesSyCfydmb"
