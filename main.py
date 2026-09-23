@@ -49,7 +49,7 @@ def calc(stars, username):
     return round(p * 0.80) if is_premium(username) else p
 
 def get_menu(username):
-    rows=[["⭐ Купить Stars"],["👑 Telegram Premium"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"]]
+    rows=[["⭐ Купить Stars"],["👑 Telegram Premium"],["👤 Профиль","📈 Курс Stars"],["📦 Мои заказы","💬 Поддержка"]]
     if username==ADMIN:
         rows.append(["⚙️ Админ"])
     return ReplyKeyboardMarkup(rows, resize_keyboard=True)
@@ -88,6 +88,17 @@ async def rate(update,ctx):
 async def support(update,ctx):
     await update.message.reply_text("💬 Поддержка\n\n@Lakizyx")
 
+
+async def my_orders(update,ctx):
+    u=(update.effective_user.username or "").lower()
+    rows=cur.execute("SELECT stars,status,created_at FROM orders WHERE username=? ORDER BY created_at DESC LIMIT 10",(u,)).fetchall()
+    if not rows:
+        return await update.message.reply_text("📦 У вас пока нет заказов.")
+    txt="📦 Последние заказы\n\n"
+    for s,st,_ in rows:
+        txt+=f"⭐ {s} • {'✅ Оплачен' if st=='paid' else '⏳ Ожидает'}\n"
+    await update.message.reply_text(txt)
+
 async def pay_menu(update,ctx):
     stars=ctx.user_data["stars"]; price=calc(stars, update.effective_user.username)
     kb=InlineKeyboardMarkup([
@@ -117,6 +128,9 @@ async def text(update,ctx):
 
     if t == "📈 Курс Stars":
         return await rate(update,ctx)
+
+    if t == "📦 Мои заказы":
+        return await my_orders(update,ctx)
 
     if t == "💬 Поддержка":
         return await support(update,ctx)
@@ -161,10 +175,10 @@ async def text(update,ctx):
         kb = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("💳 СПБ", callback_data="pay_spb"),
-                InlineKeyboardButton("💎 TON / USDT", callback_data="pay_crypto")
+                InlineKeyboardButton("💎 Криптовалюта", callback_data="pay_crypto")
             ],
             [
-                InlineKeyboardButton("◀️ Назад", ccallback_data="back_buy")
+                InlineKeyboardButton("◀️ Назад", callback_data="back_buy")
             ]
         ])
 
@@ -387,7 +401,7 @@ async def cb(update,ctx):
     if d.startswith("s"):
         ctx.user_data["stars"]=int(d[1:])
         price=calc(ctx.user_data["stars"], q.from_user.username)
-        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",ccallback_data="back_buy")]])
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("💳 СПБ",callback_data="pay_spb"),InlineKeyboardButton("💎 Криптовалюта",callback_data="pay_crypto")],[InlineKeyboardButton("◀️ Назад",callback_data="back_buy")]])
         return await q.edit_message_text(f"🛒 Подтверждение\n\nКоличество: {ctx.user_data['stars']} ⭐\nСтоимость: {price} ₽", reply_markup=kb)
 
 
@@ -395,7 +409,7 @@ async def cb(update,ctx):
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("🪙 GRAM (TON)", callback_data="pay_grm")],
             [InlineKeyboardButton("💵 USDT (TON)", callback_data="pay_usdt")],
-            [InlineKeyboardButton("◀️ Назад", ccallback_data="back_buy")]
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_buy")]
         ])
         return await q.edit_message_text(
             "💎 Криптовалюта\n\nВыберите валюту:",
@@ -470,7 +484,7 @@ async def cb(update,ctx):
         memo=str(uuid.uuid4())
         usdt=round(ctx.user_data["tg_price"]/USDT_RATE,2)
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить оплату",callback_data="check_premium")]])
-        return await q.edit_message_text(f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n💎 {coin}\n\nСумма: {usdt}\n\nКошелёк:\n`{GRAM_WALLET}`\n\nMEMO:\n`{memo}`",reply_markup=kb,parse_mode="Markdown")
+        return await q.edit_message_text(f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\n💎 {coin}\n\nСумма: {usdt}\n\nКошелёк:\n`{wallet}`\n\nMEMO:\n`{memo}`",reply_markup=kb,parse_mode="Markdown")
 
     if d.startswith("check_"):
         await q.answer()
