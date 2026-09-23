@@ -38,7 +38,7 @@ def calc(stars, username):
     p = round(stars * PRICE_PER_STAR)
     return round(p * 0.80) if is_premium(username) else p
 
-MENU = ReplyKeyboardMarkup([["⭐ Купить Stars"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"]], resize_keyboard=True)
+MENU = ReplyKeyboardMarkup([["⭐ Купить Stars"],["👤 Профиль","📈 Курс Stars"],["💬 Поддержка"],["👑 Telegram Premium"]], resize_keyboard=True)
 
 async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data.clear()
@@ -57,10 +57,9 @@ async def profile(update:Update,ctx):
 
 async def buy(update:Update,ctx):
     kb=InlineKeyboardMarkup([
-      [InlineKeyboardButton("100 ⭐",callback_data="s100"), InlineKeyboardButton("200 ⭐",callback_data="s200")],
-      [InlineKeyboardButton("300 ⭐",callback_data="s300"), InlineKeyboardButton("400 ⭐",callback_data="s400")],
-      [InlineKeyboardButton("500 ⭐",callback_data="s500"), InlineKeyboardButton("1000 ⭐",callback_data="s1000")],
-      [InlineKeyboardButton("✏️ Другое",callback_data="custom")]])
+      [InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("300 ⭐",callback_data="s300")],
+      [InlineKeyboardButton("500 ⭐",callback_data="s500")],
+      [InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")]])
     await update.message.reply_text("⭐ Выберите количество Stars:", reply_markup=kb)
 
 async def rate(update,ctx):
@@ -90,6 +89,14 @@ async def text(update,ctx):
 
     if t == "💬 Поддержка":
         return await support(update,ctx)
+
+    if t == "👑 Telegram Premium":
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("3 месяца", callback_data="tgprem_3")],
+            [InlineKeyboardButton("6 месяцев", callback_data="tgprem_6")],
+            [InlineKeyboardButton("12 месяцев", callback_data="tgprem_12")]
+        ])
+        return await update.message.reply_text("👑 Telegram Premium\n\nВыберите срок:", reply_markup=kb)
 
     if ctx.user_data.get("state") == "custom_amount":
         if not t.isdigit():
@@ -309,12 +316,7 @@ async def cb(update,ctx):
         
     if d=="back_profile": return await q.edit_message_text("👤 Закройте сообщение и используйте меню снизу.")
     if d=="back_buy":
-        kb=InlineKeyboardMarkup([
-            [InlineKeyboardButton("100 ⭐",callback_data="s100"), InlineKeyboardButton("200 ⭐",callback_data="s200")],
-            [InlineKeyboardButton("300 ⭐",callback_data="s300"), InlineKeyboardButton("400 ⭐",callback_data="s400")],
-            [InlineKeyboardButton("500 ⭐",callback_data="s500"), InlineKeyboardButton("1000 ⭐",callback_data="s1000")],
-            [InlineKeyboardButton("✏️ Другое",callback_data="custom")]
-        ])
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("300 ⭐",callback_data="s300")],[InlineKeyboardButton("500 ⭐",callback_data="s500")],[InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")]])
         return await q.edit_message_text("⭐ Выберите количество Stars:", reply_markup=kb)
     if d=="custom":
         ctx.user_data["state"]="custom_amount"
@@ -405,6 +407,15 @@ async def cb(update,ctx):
         )
     if d=="prem_spb": return await q.edit_message_text("💳 Premium\n999 ₽\nПосле оплаты: @Lakizyx")
     if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
+    if d=="tgprem_3":
+        return await q.edit_message_text("👑 Telegram Premium\n\n3 месяца")
+
+    if d=="tgprem_6":
+        return await q.edit_message_text("👑 Telegram Premium\n\n6 месяцев")
+
+    if d=="tgprem_12":
+        return await q.edit_message_text("👑 Telegram Premium\n\n12 месяцев")
+
     if d=="pay_spb":
         return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
 async def cmd_premium(update,ctx):
