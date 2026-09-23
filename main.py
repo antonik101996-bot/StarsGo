@@ -57,9 +57,10 @@ async def profile(update:Update,ctx):
 
 async def buy(update:Update,ctx):
     kb=InlineKeyboardMarkup([
-      [InlineKeyboardButton("100 ⭐",callback_data="s100"),InlineKeyboardButton("300 ⭐",callback_data="s300")],
-      [InlineKeyboardButton("500 ⭐",callback_data="s500")],
-      [InlineKeyboardButton("✏️ Ввести своё количество",callback_data="custom")]])
+      [InlineKeyboardButton("100 ⭐",callback_data="s100"), InlineKeyboardButton("200 ⭐",callback_data="s200")],
+      [InlineKeyboardButton("300 ⭐",callback_data="s300"), InlineKeyboardButton("400 ⭐",callback_data="s400")],
+      [InlineKeyboardButton("500 ⭐",callback_data="s500"), InlineKeyboardButton("1000 ⭐",callback_data="s1000")],
+      [InlineKeyboardButton("✏️ Другое",callback_data="custom")]])
     await update.message.reply_text("⭐ Выберите количество Stars:", reply_markup=kb)
 
 async def rate(update,ctx):
@@ -92,11 +93,11 @@ async def text(update,ctx):
 
     if t == "👑 Telegram Premium":
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("3 месяца • 999 ₽", callback_data="tgprem3")],
-            [InlineKeyboardButton("6 месяцев • 1299 ₽", callback_data="tgprem6")],
-            [InlineKeyboardButton("12 месяцев • 2299 ₽", callback_data="tgprem12")]
+            [InlineKeyboardButton("3 месяца • 999 ₽", callback_data="tg3")],
+            [InlineKeyboardButton("6 месяцев • 1299 ₽", callback_data="tg6")],
+            [InlineKeyboardButton("12 месяцев • 2299 ₽", callback_data="tg12")]
         ])
-        return await update.message.reply_text("👑 Telegram Premium\n\nВыберите подписку:", reply_markup=kb)
+        return await update.message.reply_text("👑 Telegram Premium\n\nВыберите срок:", reply_markup=kb)
 
     if ctx.user_data.get("state") == "custom_amount":
         if not t.isdigit():
@@ -407,15 +408,47 @@ async def cb(update,ctx):
         )
     if d=="prem_spb": return await q.edit_message_text("💳 Premium\n999 ₽\nПосле оплаты: @Lakizyx")
     if d=="prem_crypto": return await q.edit_message_text("💎 Premium\n999 ₽\nUSDT (TON) / TON")
-    if d=="tgprem3":
-        return await q.edit_message_text("👑 Telegram Premium\n\n3 месяца\n💳 Цена: 999 ₽")
 
-    if d=="tgprem6":
-        return await q.edit_message_text("👑 Telegram Premium\n\n6 месяцев\n💳 Цена: 1299 ₽")
+    if d in ["tg3","tg6","tg12"]:
+        months = {"tg3":"3 месяца","tg6":"6 месяцев","tg12":"12 месяцев"}[d]
+        price = {"tg3":999,"tg6":1299,"tg12":2299}[d]
+        ctx.user_data["tg_months"] = months
+        ctx.user_data["tg_price"] = price
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("💳 СПБ", callback_data="tg_spb"),
+             InlineKeyboardButton("💎 TON / USDT", callback_data="tg_crypto")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile")]
+        ])
+        return await q.edit_message_text(
+            f"👑 Telegram Premium\n\n{months}\n💳 Цена: {price} ₽",
+            reply_markup=kb
+        )
 
-    if d=="tgprem12":
-        return await q.edit_message_text("👑 Telegram Premium\n\n12 месяцев\n💳 Цена: 2299 ₽")
+    if d=="tg_crypto":
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("💎 GRM", callback_data="tg_grm"),
+             InlineKeyboardButton("💵 USDT (TON)", callback_data="tg_usdt")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_profile")]
+        ])
+        return await q.edit_message_text(
+            f"👑 Telegram Premium\n\n{ctx.user_data['tg_months']}\nВыберите криптовалюту:",
+            reply_markup=kb
+        )
 
+    if d=="pay_crypto":
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("💎 GRM", callback_data="pay_grm"),
+             InlineKeyboardButton("💵 USDT (TON)", callback_data="pay_usdt")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_buy")]
+        ])
+        return await q.edit_message_text(
+            "💎 Выберите способ оплаты",
+            reply_markup=kb
+        )
+
+    if d in ["pay_grm","pay_usdt","tg_grm","tg_usdt"]:
+        await q.answer("Далее используется существующий счёт")
+        return
     if d=="pay_spb":
         return await q.edit_message_text(f"💳 СПБ\nК оплате: {calc(ctx.user_data['stars'], q.from_user.username)} ₽")
 async def cmd_premium(update,ctx):
