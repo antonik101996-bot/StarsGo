@@ -13,6 +13,9 @@ TONCENTER_API = "fe4563f7b2b573f4091b2b89c2ceaf3a1f7c0e3666abcedcd0dc1b951ea3c82
 USDT_RATE = 84.50
 
 PRICE_PER_STAR = 1.35
+
+STARS_OPEN=True
+PREMIUM_OPEN=True
 db = sqlite3.connect("starsgo.db", check_same_thread=False)
 cur = db.cursor()
 
@@ -43,7 +46,6 @@ def get_menu(username):
     if username==ADMIN:
         rows.append(["⚙️ Админ"])
     return ReplyKeyboardMarkup(rows, resize_keyboard=True)
-
 
 async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data.clear()
@@ -85,6 +87,8 @@ async def text(update,ctx):
     t = update.message.text
 
     if t == "⭐ Купить Stars":
+        if not STARS_OPEN:
+            return await update.message.reply_text("❌ Продажа Stars закрыта")
         return await buy(update,ctx)
 
     if t == "👤 Профиль":
@@ -96,10 +100,13 @@ async def text(update,ctx):
     if t == "💬 Поддержка":
         return await support(update,ctx)
 
-    if t == "⚙️ Админ" and update.effective_user.username == ADMIN:
-        return await admin(update,ctx)
+    if t == "⚙️ Админ" and update.effective_user.username==ADMIN:
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")]])
+        return await update.message.reply_text("⚙️ Админ-панель",reply_markup=kb)
 
     if t == "👑 Telegram Premium":
+        if not PREMIUM_OPEN:
+            return await update.message.reply_text("❌ Продажа Premium закрыта")
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("3 месяца • 999 ₽", callback_data="tg3")],
             [InlineKeyboardButton("6 месяцев • 1299 ₽", callback_data="tg6")],
@@ -317,6 +324,18 @@ def check_payment(memo, usdt_amount):
 async def cb(update,ctx):
     q=update.callback_query
     d=q.data
+    if d=="toggle_stars":
+        global STARS_OPEN
+        STARS_OPEN=not STARS_OPEN
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")]])
+        return await q.edit_message_text("⚙️ Админ-панель",reply_markup=kb)
+
+    if d=="toggle_premium":
+        global PREMIUM_OPEN
+        PREMIUM_OPEN=not PREMIUM_OPEN
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton(f"⭐ Stars: {'🟢' if STARS_OPEN else '🔴'}",callback_data="toggle_stars")],[InlineKeyboardButton(f"👑 Premium: {'🟢' if PREMIUM_OPEN else '🔴'}",callback_data="toggle_premium")]])
+        return await q.edit_message_text("⚙️ Админ-панель",reply_markup=kb)
+
     if d == "admin_users":
         cur.execute("SELECT COUNT(*) FROM premium")
         count = cur.fetchone()[0]
